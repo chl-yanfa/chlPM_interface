@@ -1,0 +1,157 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="mapper.standard.FollowMapper">
+	<resultMap id="follow" type="Follow" >
+		<id property="id" column="ID" />
+		<result property="memberCode" column="MEMBER_CODE" />
+		<result property="orderId" column="ORDER_ID" />
+		<result property="carCode" column="CAR_CODE" />
+		<result property="created" column="CREATED" />
+		<result property="deleteTag" column="DELETE_TAG" />
+		<result property="isUnfollow" column="IS_UNFOLLOW" />	
+		<result property="source" column="SOURCE" />
+		<result property="ts" column="TS" />
+		<result property="timeliness" column="TIMELINESS" />
+		<result property="unfollowTime" column="UNFOLLOW_TIME" />
+		<result property="reservedField1" column="RESERVED_FIELD1" />
+		<result property="reservedField2" column="RESERVED_FIELD2" />
+  	</resultMap>
+  	<sql id="page_limit_tail" >
+		<if test="endRow != null">
+			LIMIT #{startRow},#{endRow}
+		</if>
+	</sql>
+  	<!-- 
+		交易大厅-根据订单和车辆编号获取关注记录
+	-->
+  <select id="findFollowByCarCode" resultMap="follow" parameterType="map">
+  		SELECT * 
+  		FROM sdic_pm_customer_attention
+  		WHERE 
+  		DELETE_TAG = #{deleteTag} AND 
+  		MEMBER_CODE = #{memberCode} AND CAR_CODE = #{carCode}
+  	</select>
+  	<!-- 
+		交易大厅-更新关注记录
+	-->
+  	 <update id="updateFollow" >
+       update sdic_pm_customer_attention
+    <set>
+    		<if test="memberCode != null and memberCode != ''">
+    			MEMBER_CODE=#{memberCode},
+    		</if>
+    		<if test="orderId != null and orderId != ''">
+    			ORDER_ID=#{orderId},
+    		</if>
+    		<if test="carCode != null and carCode != ''">
+    			CAR_CODE=#{carCode},
+    		</if>
+    		<if test="created != null">
+    			CREATED=#{created},
+    		</if>
+    		<if test="deleteTag != null and deleteTag != ''">
+    			DELETE_TAG=#{deleteTag},
+    		</if>
+    		<if test="isUnfollow != null and isUnfollow != ''">
+    			IS_UNFOLLOW=#{isUnfollow},
+    		</if>
+    		<if test="unfollowTime != null and unfollowTime != ''">
+    			UNFOLLOW_TIME=#{unfollowTime},
+    		</if>
+    </set>
+    where id = #{id}
+  </update>
+  	<!-- 
+		交易大厅-保存关注
+	-->
+  	<insert id="createFollow" >
+     insert into sdic_pm_customer_attention (
+     <trim suffix="" suffixOverrides=",">
+		 <if test="id != null">
+	    		ID,
+	     </if>
+		 <if test="memberCode != null">
+	    		MEMBER_CODE,
+	     </if>
+		 <if test="orderId != null">
+	    		ORDER_ID,
+	     </if>
+		 <if test="carCode != null">
+	    		CAR_CODE,
+	     </if>
+	     <if test="source != null">
+	    		SOURCE,
+	     </if>
+		 <if test="created != null">
+	    		CREATED,
+	     </if>
+	     <if test="unfollowTime != null">
+	    		UNFOLLOW_TIME,
+	     </if>
+		 <if test="deleteTag != null">
+	    		DELETE_TAG,
+	     </if>
+		 <if test="isUnfollow != null">
+	    		IS_UNFOLLOW,
+	     </if>
+		 <if test="ts != null">
+	    		TS,
+	     </if>
+		 <if test="timeliness != null">
+	    		TIMELINESS,
+	     </if>
+		 <if test="reservedField1 != null">
+	    		RESERVED_FIELD1,
+	     </if>
+		 <if test="reservedField2 != null">
+	    		RESERVED_FIELD2
+	     </if>
+	     
+      </trim>
+    ) values(
+     <trim suffix="" suffixOverrides=",">
+		 <if test="id != null">
+	     #{id},
+	     </if>
+		 <if test="memberCode != null">
+	     #{memberCode},
+	     </if>
+		 <if test="orderId != null">
+	     #{orderId},
+	     </if>
+		 <if test="carCode != null">
+	     #{carCode},
+	     </if>
+	     <if test="source != null">
+	     #{source},	
+	     </if>
+		 <if test="created != null">
+	     #{created},
+	     </if>
+	     <if test="unfollowTime != null">
+	     #{unfollowTime},
+	     </if>
+		 <if test="deleteTag != null">
+	     #{deleteTag},
+	     </if>
+		 <if test="isUnfollow != null">
+	     #{isUnfollow},
+	     </if>
+		 <if test="ts != null">
+	     #{ts},
+	     </if>
+		 <if test="timeliness != null">
+	     #{timeliness},
+	     </if>
+		 <if test="reservedField1 != null">
+	     #{reservedField1},
+	     </if>
+		 <if test="reservedField2 != null">
+	     #{reservedField2}
+	     </if>
+      </trim>
+    )
+  </insert>
+</mapper>

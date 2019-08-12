@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="mapper.standard.TradeMapper">
+	<resultMap id="tradeFlow" type="TradeFlow">
+		<id 	column="trade_id" 		property="tradeId" />
+		<result column="flow_no" 		property="flowNo" />
+		<result column="amount" 		property="amount" />
+		<result column="trade_state" 	property="tradeState" />
+		<result column="trade_state_s" 	property="tradeStateS" />
+		<result column="summary" 		property="summary" />
+		<result column="trade_time" 	property="tradeTime" />
+	</resultMap>
+	<select id="getTradeFlow" resultMap="tradeFlow">
+		SELECT
+			SPCMW.ID trade_id,
+			SPCMW.OPERATOR_CASH amount,
+			SPCMW.OPERATOR_TYPE trade_state,
+			CASE SPCMW.OPERATOR_TYPE WHEN '1' THEN '冻结' WHEN '2' THEN '解冻' WHEN '4' THEN '充值' WHEN '5' THEN '退款' END
+			AS trade_state_s,
+			SPCMW.MEMO summary,
+			SPCMW.OPERATOR_TIME trade_time
+		FROM 
+			sdic_pm_customer_margin_water SPCMW 
+		WHERE 
+			SPCMW.MEMBER_CODE = #{memberCode}
+		AND
+			SPCMW.TIMELINESS = '0'
+		AND
+			SPCMW.DELETE_TAG = '0'
+		<if test="operatorType != null and operatorType != ''">
+			AND SPCMW.OPERATOR_TYPE = #{operatorType}
+		</if>
+		UNION ALL
+		SELECT
+			SIFPW.ID trade_id,
+			SIFPW.OPERATOR_CASH amount,
+			SIFPW.OPERATOR_TYPE trade_state,
+			CASE SIFPW.OPERATOR_TYPE WHEN '1' THEN '冻结' WHEN '2' THEN '解冻' WHEN '3' THEN '付款' WHEN '5' THEN '退款' END
+			AS trade_state_s,
+			SIFPW.MEMO summary,
+			SIFPW.OPERATOR_TIME trade_time
+		FROM 
+			sdic_inner_finance_pay_water SIFPW
+		WHERE 
+			SIFPW.MEMBER_CODE = #{memberCode}
+		AND
+			SIFPW.IS_DELETE = 0
+		<if test="operatorType != null and operatorType != ''">
+			AND SIFPW.OPERATOR_TYPE = #{operatorType}
+		</if>
+		ORDER BY trade_time DESC
+	</select>
+	<select id="getTradeFlowTotal" resultType="int">
+		SELECT 
+			SUM(TOTAL) 
+		FROM(
+			SELECT
+				COUNT(1) TOTAL
+			FROM 
+				sdic_pm_customer_margin_water SPCMW 
+			WHERE 
+				SPCMW.MEMBER_CODE = #{memberCode}
+			AND
+				SPCMW.TIMELINESS = '0'
+			AND
+				SPCMW.DELETE_TAG = '0'
+			<if test="operatorType != null and operatorType != ''">
+				AND SPCMW.OPERATOR_TYPE = #{operatorType}
+			</if>
+			UNION ALL
+			SELECT
+				COUNT(1) TOTAL
+			FROM 
+				sdic_inner_finance_pay_water SIFPW
+			WHERE 
+				SIFPW.MEMBER_CODE = #{memberCode}
+			AND
+				SIFPW.IS_DELETE = 0
+			<if test="operatorType != null and operatorType != ''">
+				AND SIFPW.OPERATOR_TYPE = #{operatorType}
+			</if>
+		)T
+	</select>
+</mapper>

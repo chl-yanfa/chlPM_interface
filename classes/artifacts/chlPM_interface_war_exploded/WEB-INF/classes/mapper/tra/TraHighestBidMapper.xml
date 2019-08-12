@@ -1,0 +1,220 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="mapper.standard.TraHighestBidMapper">
+	<resultMap id="TraHighestBid" type="TraHighestBid" >
+		<id property="id" column="ID" />
+		<result property="orderId" column="ORDER_ID" />
+		<result property="carCode" column="CAR_CODE" />
+		<result property="memberCode" column="MID" />
+		<result property="maximumPrice" column="MAXIMUM_PRICE" />
+		<result property="bidWay" column="BID_WAY" />
+		<result property="bidType" column="BID_TYPE" />
+		<result property="deleteTag" column="DELETE_TAG" />
+		<result property="ts" column="TS" />
+		<result property="timeliness" column="TIMELINESS" />
+		<result property="reservedField1" column="RESERVED_FIELD1" />
+		<result property="reservedField2" column="RESERVED_FIELD2" />
+		<result property="promisesType" column="PROMISES_TYPE" />
+		<result property="carFirstImg" column="CAR_FIRST_IMG" />
+		<result property="brand" column="BRAND" />
+		<result property="model" column="MODEL" />
+		<result property="color" column="COLOR" />
+		<result property="countryName" column="COUNTRY_NAME" />
+		<result property="seriesName" column="SERIES_NAME" />
+		<result property="carInfo" column="CAR_INFO" />
+		<result property="regDate" column="REG_DATE" />
+		<result property="manufacturer" column="MANUFACTURER" />
+		<result property="status" column="STATUS" />
+		<result property="margin" column="MARGIN" />
+		<result property="isThird" column="IS_THIRD" />
+		<result property="xmlPath" column="XML_PATH" />
+		<result property="auctionModel" column="AUCTION_MODEL" />
+  	</resultMap>
+
+	<sql id="page_limit_tail" >
+		<if test="endRow != null">
+			LIMIT #{startRow},#{endRow}
+		</if>
+	</sql>
+	<!-- 
+		交易大厅-查询某个订单的最高价（本外区分，不区分出价类型）
+	-->
+  	<select id="getTraHighestBidByOrder" parameterType="TraHighestBid" resultMap="TraHighestBid" >
+	    SELECT 
+	    	ORDER_ID,
+	    	CAR_CODE,
+	    	MEMBER_CODE,
+	    	MAXIMUM_PRICE,	    	
+	    	BID_TYPE,
+	    	PROMISES_TYPE
+	    FROM CAR_PM_HIGHEST_BID 
+	    WHERE ORDER_ID = #{orderId} and PROMISES_TYPE = #{promisesType} AND IS_THIRD='0' and DELETE_TAG='0' AND TIMELINESS = #{timeliness}
+	</select>
+		
+	<!-- 
+		交易大厅-查询某个车辆的最高价
+	-->
+  	<select id="getTraHighestBidByCar" parameterType="map" resultMap="TraHighestBid" >
+	    SELECT 
+	        MAX(MAXIMUM_PRICE),
+	    	ORDER_ID,
+	    	AUCTION_NO,
+	    	MID,
+	    	MAXIMUM_PRICE,	    	
+	    	BID_TYPE
+	    FROM car_pm_highest_bid 
+	    WHERE IS_DELETE=0  
+	      AND ORDER_ID = #{orderId}
+	</select>
+	
+    <!-- 
+		更改车辆的最高价
+	-->
+    <update id="updateTraHighestBidByCar" >
+       UPDATE car_pm_highest_bid
+	    <set>
+	    	ORDER_ID = #{orderId},
+	    	ORDER_NO = #{orderNo},
+	    	MAXIMUM_PRICE = #{maximumPrice},
+	    	MID = #{memberCode},
+	    	BID_TYPE = #{bidType},
+	    	BID_WAY = #{bidWay},
+	    	TS = SYSDATE()    	
+	    </set>
+    	WHERE  IS_DELETE=0  
+    	  AND ORDER_ID = #{orderId}
+    </update>
+  
+  <!-- 
+		保存某个订单的最高价
+	-->
+  <insert id="insertTraHighestBid" >
+     insert into car_pm_highest_bid (
+     <trim suffix="" suffixOverrides=",">
+		 <if test="id != null">
+	    		ID,
+	     </if>
+		 <if test="orderId != null">
+	    		ORDER_ID,
+	     </if>
+	      <if test="orderNo != null">
+	    		ORDER_NO,
+	     </if>
+		 <if test="carCode != null">
+	    		AUCTION_NO,
+	     </if>
+		 <if test="memberCode != null">
+	    		MID,
+	     </if>
+		 <if test="maximumPrice != null">
+	    		MAXIMUM_PRICE,
+	     </if>
+	     <if test="bidWay != null">
+	    		BID_WAY,
+	     </if>
+	     <if test="bidType != null">
+	    		BID_TYPE,
+	     </if>
+		 <if test="deleteTag != null">
+	    		IS_DELETE,
+	     </if>
+		 <if test="ts != null">
+	    		TS,
+	     </if>
+      </trim>
+    ) values(
+     <trim suffix="" suffixOverrides=",">
+		 
+		 <if test="id != null">
+	     #{id},
+	     </if>
+		 <if test="orderId != null">
+	     #{orderId},
+	     </if>
+	     <if test="orderNo != null">
+	     #{orderNo},
+	     </if>
+		 <if test="carCode != null">
+	     #{carCode},
+	     </if>
+		 <if test="memberCode != null">
+	     #{memberCode},
+	     </if>
+		 <if test="maximumPrice != null">
+	     #{maximumPrice},
+	     </if>
+	     <if test="bidWay != null">
+	     #{bidWay},
+	     </if>
+	     <if test="bidType != null">
+	     #{bidType},
+	     </if>
+		 <if test="deleteTag != null">
+	     #{deleteTag},
+	     </if>
+		 <if test="ts != null">
+	     #{ts},
+	     </if>
+      </trim>
+    )
+  </insert>
+  
+  <sql id="notThaw" >
+		SELECT 
+        a.ID,
+        a.ORDER_ID,
+        a.BID_WAY,
+        a.BID_TYPE,
+        a.PROMISES_TYPE,
+        a.MARGIN,
+        a.TS,
+        a.MAXIMUM_PRICE,
+        b.ORDER_STATUS AS STATUS,
+        b.AUCTION_MODEL,
+        T1.CAR_FIRST_IMG,
+        T1.CAR_CODE,
+        T2.REG_DATE,
+        T2.MANUFACTURER,
+        T2.SERIES_NAME,
+        T2.MODEL,
+        T2.COLOR,
+        T2.CAR_INFO,
+      CONCAT(date_format(T2.CREATED, '%Y%m'),'/',T1.CAR_CODE,'/',T3.REPORT_CODE,'.html') XML_PATH 
+      FROM TRA_HIGHEST_BID a
+      LEFT JOIN TRA_INDENT b ON b.ORDER_ID = a.ORDER_ID 
+      LEFT JOIN TRA_CAR_EXPAND T1 ON T1.CAR_CODE = a.CAR_CODE
+                                     AND T1.DELETE_TAG = 0
+      LEFT JOIN TRA_CAR_BASE T2 ON T2.ID = T1.CAR_BASE_ID
+      LEFT JOIN VDS_TESTREPORT_BASE T3 ON T3.CAR_CODE = a.CAR_CODE
+                                      AND T3.DELETE_TAG = 0
+	  WHERE (
+	  	b.ORDER_STATUS IN ('70','80','90','100','130','170','180') 
+	  	 or 
+	  	(b.ORDER_STATUS = '110' AND b.CONTROL_WISH_TAG = #{controlWishTag})
+	  ) 
+	  AND a.IS_THIRD=#{isThird} 
+	  AND a.DELETE_TAG = #{deleteTag} 
+	  AND a.TIMELINESS = #{timeliness}
+	  AND a.MEMBER_CODE = #{memberCode}
+	  ORDER BY  a.TS DESC 
+	</sql>
+	 <!-- 
+		会员中心-获取我未解冻保证金及相关信息
+		需要参数：memberCode：用户编号
+	-->
+  	<select id="getNotThaw" parameterType="map" resultMap="TraHighestBid" >
+  	   <include refid="notThaw"/>
+  	   <include refid="page_limit_tail"/>
+	</select>
+  <!-- 
+		会员中心-获取我未解冻保证金及相关信息总数
+		需要参数：memberCode：用户编号
+	-->
+  	<select id="getNotThawCount" parameterType="map" resultType="integer" >
+	   SELECT COUNT(*) FROM (
+  	   	<include refid="notThaw"/>
+  	   ) TT
+	</select>
+</mapper>

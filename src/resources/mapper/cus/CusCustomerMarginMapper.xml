@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="mapper.standard.CusCustomerMarginMapper">
+	<resultMap id="cusCustomerMargin" type="CusCustomerMargin" >
+		<id property="id" column="ID" />
+		<result property="memberCode" column="MEMBER_CODE" />
+		<result property="buyerMoney" column="BUYER_MONEY" />
+		<result property="buyerFreeze" column="BUYER_FREEZE" />
+		<result property="usableMargin" column="USABLE_MARGIN" />
+		<result property="deleteTag" column="DELETE_TAG" />
+		<result property="ts" column="TS" />
+		<result property="timeliness" column="TIMELINESS" />
+		<result property="reservedField1" column="RESERVED_FIELD1" />
+		<result property="reservedField2" column="RESERVED_FIELD2" />
+  	</resultMap>
+
+  	<!-- 
+		交易大厅-冻结保证金
+		需要参数：freezeAmount：保证金额 memberCode：会员code
+	-->
+
+    <update id="updateCusCustomerMargin" parameterType="map">
+       update CAR_PM_CUSTOMER_MARGIN
+    <set>
+		WALLET_PLEDGE_FREEZE=WALLET_PLEDGE_FREEZE + #{freezeAmount},
+		 WALLET_PLEDGE=WALLET_PLEDGE - #{freezeAmount}
+    </set>
+    where ID = #{memberCode}
+  </update>
+  
+  <select id="updateCusCustomerMarginByPro" parameterType="map" statementType="CALLABLE">
+    	{CALL CUSTOMER_BID_MARGIN(
+    	#{operatorCash,mode=IN,jdbcType=INTEGER},
+    	#{memberCode,mode=IN,jdbcType=VARCHAR},
+    	#{id,mode=IN,jdbcType=VARCHAR},
+    	#{memo,mode=IN,jdbcType=VARCHAR},
+    	#{carCode,mode=IN,jdbcType=VARCHAR},
+    	#{orderId,mode=IN,jdbcType=VARCHAR},
+    	#{operatorType,mode=IN,jdbcType=CHAR},
+    	#{timeliness,mode=IN,jdbcType=CHAR},
+    	#{deleteTag,mode=IN,jdbcType=CHAR}
+    	)}
+  </select>
+  
+  	<!-- 
+		交易大厅-解冻保证金
+		需要参数：freezeAmount：保证金额 memberCode：会员code
+	-->
+
+    <update id="updateCusCustomerMarginUnlock" parameterType="map">
+       update car_pm_customer_margin
+    <set>
+		wallet_pledge_freeze=wallet_pledge_freeze - #{freezeAmount},
+		wallet_pledge=wallet_pledge  + #{freezeAmount}
+    </set>
+    where id = #{memberCode}
+  	</update>
+  
+  	<!-- 
+		交易大厅-查询我的保证金 -OK
+	-->
+  	<select id="getCusCustomerMarginByMember" resultMap="cusCustomerMargin" parameterType="map">
+	    SELECT 
+	    	spcm.wallet_pledge               as walletPledge,
+	    	spcm.wallet_pledge_freeze         as walletPledgeFreeze
+	    FROM car_pm_customer_margin  spcm
+	    WHERE spcm.id = #{uid} and spcm.IS_DELETE=#{deleteTag}
+	</select>
+
+</mapper>

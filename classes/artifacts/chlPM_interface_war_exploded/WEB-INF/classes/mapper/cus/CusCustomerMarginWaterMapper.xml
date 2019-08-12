@@ -1,0 +1,198 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="mapper.standard.CusCustomerMarginWaterMapper">
+	<resultMap id="cusCustomerMarginWater" type="CusCustomerMarginWater" >
+		<result property="operatorType" column="OPERATOR_TYPE" />
+		<result property="chargeOrder" column="CHARGE_ORDER" />
+		<result property="chargeSource" column="CHARGE_SOURCE" />
+		<result property="id" column="ID" />
+		<result property="memberCode" column="MEMBER_CODE" />
+		<result property="operatorCash" column="OPERATOR_CASH" />
+		<result property="memo" column="MEMO" />
+		<result property="operatorUser" column="OPERATOR_USER" />
+		<result property="operatorTime" column="OPERATOR_TIME" />
+		<result property="deleteTag" column="DELETE_TAG" />
+		<result property="ts" column="TS" />
+		<result property="timeliness" column="TIMELINESS" />
+		<result property="reservedField1" column="RESERVED_FIELD1" />
+		<result property="reservedField2" column="RESERVED_FIELD2" />
+		<result property="orderId" column="ORDER_ID" />
+		<result property="carCode" column="CAR_CODE" />
+		<result property="carFirstImg" column="CAR_FIRST_IMG" />
+		<result property="brand" column="BRAND" />
+		<result property="model" column="MODEL" />
+		<result property="color" column="COLOR" />
+		<result property="countryName" column="COUNTRY_NAME" />
+		<result property="seriesName" column="SERIES_NAME" />
+		<result property="carInfo" column="CAR_INFO" />
+		<result property="regDate" column="REG_DATE" />
+		<result property="manufacturer" column="MANUFACTURER" />
+		<result property="balance" column="BALANCE" />
+		<result property="status" column="STATUS" />
+		<result property="margin" column="MARGIN" />
+		
+		<result property="maximumPrice" column="MAXIMUM_PRICE" />
+		<result property="bidWay" column="BID_WAY" />
+		<result property="bidType" column="BID_TYPE" />
+		<result property="promisesType" column="PROMISES_TYPE" />
+		<result property="xmlPath" column="XML_PATH" />
+		<result property="auctionModel" column="AUCTION_MODEL" />
+		<result property="statusReason" column="STATUS_REASON"/>
+  	</resultMap>
+  
+	<sql id="page_limit_tail" >
+		<if test="endRow != null">
+			LIMIT #{startRow},#{endRow}
+		</if>
+	</sql>
+	<!-- 
+		交易大厅-根据操作类型获取会员保证金流水
+	-->
+	<sql id="findMyWater" >
+		SELECT 
+    	CMW.ID,
+    	CMW.OPERATOR_TYPE,
+		CMW.CHARGE_ORDER,
+		CMW.CHARGE_SOURCE,
+		CMW.MEMBER_CODE,
+		CMW.OPERATOR_CASH,
+		CMW.MEMO,
+		CMW.OPERATOR_USER,
+		CMW.OPERATOR_TIME,
+		CMW.ORDER_ID,
+		CMW.BALANCE,
+		T1.CAR_FIRST_IMG,
+        T1.CAR_CODE,
+        T2.REG_DATE,
+        T2.MANUFACTURER,
+        T2.SERIES_NAME,
+        T2.MODEL,
+        T2.COLOR,
+        T2.CAR_INFO,
+        b.AUCTION_MODEL,
+        TI.STATUS_REASON,
+        CONCAT_WS(DATE_FORMAT(T2.CREATED, '%Y%m'),'/',T1.CAR_CODE,'/',T3.REPORT_CODE,'.html') XML_PATH 
+    FROM CUS_CUSTOMER_MARGIN_WATER CMW
+    LEFT JOIN TRA_CAR_EXPAND T1 ON T1.CAR_CODE = CMW.CAR_CODE
+                                     AND T1.DELETE_TAG = 0
+    LEFT JOIN TRA_CAR_BASE T2 ON T2.ID = T1.CAR_BASE_ID
+    LEFT JOIN VDS_TESTREPORT_BASE T3 ON T3.CAR_CODE = CMW.CAR_CODE
+                                      AND T3.DELETE_TAG = 0
+    LEFT JOIN TRA_INDENT b ON b.ORDER_ID = CMW.ORDER_ID 
+    LEFT JOIN tra_indent TI ON TI.ORDER_ID=CMW.ORDER_ID
+    <where>
+    	CMW.DELETE_TAG = #{deleteTag}
+    	<if test="operatorType1 != null and operatorType1 !=''">
+    		<choose>
+    		<when test="operatorType1 ==3">
+    			AND CMW.OPERATOR_TYPE in (#{operatorType1},#{operatorType2})
+    		</when>
+    		<otherwise>
+    			AND CMW.OPERATOR_TYPE in (#{operatorType1},#{operatorType3})
+    		</otherwise>
+    	</choose>
+		</if>
+		AND CMW.MEMBER_CODE = #{memberCode}
+    </where>
+    ORDER BY CMW.OPERATOR_TIME DESC
+	</sql>
+  <!-- 
+		交易大厅-保存会员保证金流水
+		需要参数：CusCustomerMarginWater：对象中所有必填项
+	-->
+    <insert id="insertCusCustomerMarginWater" parameterType="map">
+     insert into car_pm_customer_margin_water (
+     <trim suffix="" suffixOverrides=",">
+		 <if test="id != null">
+	    		ID,
+	     </if>
+		 <if test="memberCode != null">
+	    		MID,
+	     </if>
+		 <if test="operatorCash != null">
+	    		OPERATOR_CASH,
+	     </if>
+		 <if test="memo != null">
+	    		MEMO,
+	     </if>
+		 <if test="operatorUser != null">
+	    		UPDATE_USER,
+	     </if>
+		 <if test="operatorTime != null">
+	    		UPDATE_TIME,
+	     </if>
+		 <if test="deleteTag != null">
+	    		IS_DELETE,
+	     </if>
+	     <if test="orderId != null">
+	    		ORDER_ID,
+	     </if>
+	     <if test="orderNo != null">
+	    		ORDER_NO,
+	     </if>
+	      <if test="carCode != null">
+	    		AUCTION_NO,
+	     </if>
+	     <if test="operatorType != null">
+	    		OPERATOR_TYPE,
+	     </if>
+      </trim>
+    ) values(
+     <trim suffix="" suffixOverrides=",">
+		 <if test="id != null">
+	     #{id},
+	     </if>
+		 <if test="memberCode != null">
+	     #{memberCode},
+	     </if>
+		 <if test="operatorCash != null">
+	     #{operatorCash},
+	     </if>
+		 <if test="memo != null">
+	     #{memo},
+	     </if>
+		 <if test="operatorUser != null">
+	     #{operatorUser},
+	     </if>
+		 <if test="operatorTime != null">
+	     #{operatorTime},
+	     </if>
+		 <if test="deleteTag != null">
+	     #{deleteTag},
+	     </if>
+	     <if test="orderId != null">
+	     #{orderId},
+	     </if>
+	      <if test="orderNo != null">
+	     #{orderNo},
+	     </if>
+	     <if test="carCode != null">
+	     #{carCode},
+	     </if>
+	     <if test="operatorType != null">
+	     #{operatorType},
+	     </if>
+      </trim>
+    )
+  </insert>
+  
+  <!-- 
+		会员中心-查询会员保证金流水
+	-->
+  <select id="findCusCustomerMarginWaterByMember" parameterType="map" resultMap="cusCustomerMarginWater">
+  	<include refid="findMyWater"/>
+  	<include refid="page_limit_tail"/>
+  </select>
+   <!-- 
+		会员中心-查询会员保证金流水-总数
+	-->
+  <select id="findCusCustomerMarginWaterByMemberCount" parameterType="map" resultType="integer">
+    SELECT  
+    COUNT(*) 
+    FROM (
+    	<include refid="findMyWater"/>
+    ) TT
+  </select>
+</mapper>

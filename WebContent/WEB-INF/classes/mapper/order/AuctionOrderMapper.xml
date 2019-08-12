@@ -1,0 +1,231 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="mapper.standard.AuctionOrderMapper">
+	<resultMap id="BaseResultMap" type="AuctionOrder">
+		<id 	column="order_id" 		property="orderId" />
+		<result column="driving_brand" 	property="drivingBrand" />
+	    <result column="driving_model" 	property="drivingModel" />
+	    <result column="driving_system" property="drivingSystem" />
+	    <result column="full_name" 		property="fullName" />
+	    <result column="gearbox_type" 	property="gearboxType" />
+	    <result column="displacement" 	property="displacement" />
+	    <result column="order_number" 	property="orderNumber" />
+	    <result column="joint_price" 	property="jointPrice" />
+	    <result column="deal_type" 		property="dealType" />
+	    <result column="deal_type_s" 	property="dealTypeS" />
+	    <result column="deal_date" 		property="dealDate" />
+	    <result column="order_state" 	property="orderState" />
+	</resultMap>
+	<resultMap id="auctionList" type="AuctionDto">
+		<id 	column="id" 					property="id" />
+	    <result column="auction_type" 			property="auctionType" />
+	    <result column="auction_type_s" 		property="auctionTypeS" />
+	    <result column="auction_no" 			property="auctionNo" />
+	    <result column="full_name" 				property="fullName" />
+	    <result column="lot_areas" 				property="lotAreas" />
+	    <result column="lot_areas_id" 			property="lotAreasId" />
+	    <result column="create_user" 			property="createUser" />
+	    <result column="create_time" 			property="createTime" />
+	    <result column="order_state" 			property="orderState" />
+	    <result column="auction_start_time" 	property="auctionStartTime" />
+	    <result column="auction_end_time" 	    property="auctionEndTime" />
+		<association property="imgPath" column="auctionId=id" javaType="String" 
+			select="getHeadImgByAuctionId"/>
+	</resultMap>
+	
+	<select id="getOrderList" resultMap="BaseResultMap">
+		SELECT
+			SIAS.id order_id,
+			SIA.driving_brand,SIA.driving_model,SIA.driving_system,
+			SIA.full_name,SIA.gearbox_type,SIA.displacement,
+			SIAS.order_number,SIAS.joint_price,SIAS.deal_type,
+			CASE SIAS.deal_type WHEN '0' THEN '竞价' END AS deal_type_s,
+			SIAS.deal_date,SIAS.order_state
+		FROM 
+			sdic_inner_auction_set SIAS LEFT JOIN sdic_inner_auction SIA ON SIAS.auction_id = SIA.id
+		WHERE 
+			SIAS.member_code = #{memberCode}
+		AND
+			SIAS.is_delete = 0
+		<if test="orderState != null and orderState != ''">
+			AND SIAS.order_state = #{orderState}
+		</if>
+		ORDER BY SIAS.create_time DESC
+	</select>
+	<select id="getOrderListTotal" resultType="int">
+		SELECT
+			COUNT(1)
+		FROM 
+			sdic_inner_auction_set SIAS
+		WHERE 
+			SIAS.member_code = #{memberCode}
+		AND
+			SIAS.is_delete = 0
+		<if test="orderState != null and orderState != ''">
+			AND SIAS.order_state = #{orderState}
+		</if>
+		ORDER BY SIAS.create_time DESC
+	</select>
+	
+	<select id="getMyOrderList" resultMap="auctionList">
+		SELECT
+		     cpa.id       as id,
+			 cpas.id      as   orderId,
+			 case cpa.auction_type when 0 then CONCAT('整车配件（',cpa.full_name,'）') 
+			  when 1 then CONCAT('高价值配件（',cpa.full_name,'）') 
+			  when 2 then CONCAT('大宗物资（',cpa.full_name,'）') end AS fullName,
+			 cpas.order_no      as orderNo,
+			 cpas.order_state   as orderState,
+			 CASE cpas.order_state WHEN '50' THEN '已成交' WHEN '60' THEN '已付款' WHEN '80' THEN '已提货'  WHEN '-10' THEN '已退货'  end as orderStateS,
+			 cpas.joint_price   as totalPrice,
+			 cpase.deal_time    as dealTime,
+			 cpase.pay_time     as payTime,
+			 cpase.take_car_time as takeCarTime
+			FROM
+			 car_pm_auction_set cpas
+			 LEFT JOIN car_pm_auction cpa ON cpas.auction_id = cpa.id and cpa.is_delete = 0
+			 LEFT JOIN car_pm_aftersale cpase ON cpas.id = cpase.auction_set_id and cpase.is_history = 0 and cpase.is_delete = 0
+			WHERE
+			 cpas.deal_mid = #{dealMid}
+			 and cpas.is_delete = 0
+			 and cpas.order_state in ('-10','50','60','80')
+			 ORDER BY cpas.update_time DESC;
+	</select>
+	
+	<select id="getMyOrder2List" resultMap="BaseResultMap">
+		select 
+			 cso.id   as orderId,
+			 cso.order_no as orderNo,
+			 cso.car_number as carNumber,
+			 cso.car_model_number  as fullName,
+			 case cso.order_type when '1' then 0 else (select count(1) from car_scrap_order_autoparts csoa where csoa.order_id = cso.id) end as partsCount,
+			 case cso.order_type when '1' then cso.order_amount else (select sum(csoa.amount) from car_scrap_order_autoparts csoa where csoa.order_id = cso.id) end as orderAmount,
+			 t1.createtime as recoveryTime,
+			 t2.createtime as settlementTime
+			from car_scrap_order cso
+			 Left join (select max(createtime) createtime,order_id,stauts from car_scrap_order_audit where stauts = '3' GROUP BY order_id,stauts) t1 on t1.order_id = cso.id
+			 Left join (select max(createtime) createtime,order_id,stauts from car_scrap_order_audit where stauts = '6' GROUP BY order_id,stauts) t2 on t2.order_id = cso.id
+			where 
+			 cso.client_id = #{dealMid}
+			 <if test="type == 2 ">
+			 and cso.order_type = '2'
+			 and cso.order_status ='8'
+			</if>
+			 <if test="type == 1 ">
+			 and cso.order_type = '1'
+			 and cso.order_status ='7'
+			</if>
+			 and cso.isremove = 0
+			 ORDER BY cso.operatortime DESC
+	</select>
+	
+	<select id="getMyOrderListTotal" resultType="int">
+		SELECT
+			COUNT(1)
+		FROM
+			 car_pm_auction_set cpas
+			 LEFT JOIN car_pm_auction cpa ON cpas.auction_id = cpa.id and cpa.is_delete = 0
+			 LEFT JOIN car_pm_aftersale cpase ON cpas.id = cpase.auction_set_id and cpase.is_history = 0 and cpase.is_delete = 0
+			WHERE
+			 cpas.deal_mid = #{dealMid}
+			 and cpas.is_delete = 0
+			 and cpas.order_state in ('-10','50','60','80')
+			 ORDER BY cpas.update_time DESC;
+	</select>
+	
+		<select id="getMyOrderList2Total" resultType="int">
+		SELECT
+			COUNT(1)
+		from car_scrap_order cso
+			 Left join (select max(createtime) createtime,order_id,stauts from car_scrap_order_audit where stauts = '3' GROUP BY order_id,stauts) t1 on t1.order_id = cso.id
+			 Left join (select max(createtime) createtime,order_id,stauts from car_scrap_order_audit where stauts = '6' GROUP BY order_id,stauts) t2 on t2.order_id = cso.id
+			where 
+			 cso.client_id = #{dealMid}
+			 <if test="type == 2 ">
+			 and cso.order_type = '2'
+			 and cso.order_status ='8'
+			</if>
+			 <if test="type == 1 ">
+			 and cso.order_type = '1'
+			 and cso.order_status ='7'
+			</if>
+			 and cso.isremove = 0
+			 ORDER BY cso.operatortime DESC
+	</select>
+	
+	<!-- getOrderListTab 订单列表TAB -->
+	<select id="getOrderListTab" resultType="java.util.Map">
+		SELECT 
+			'0' AS ORDER_STATE, COUNT(1) AS TAB_COUNT
+		FROM 
+			sdic_inner_auction_set SIAS
+		WHERE 
+			SIAS.member_code = #{memberCode} 
+		AND
+			SIAS.is_delete = 0
+		<!-- 待付款 -->
+		UNION ALL
+		SELECT 
+			'1' AS ORDER_STATE, COUNT(1) AS TAB_COUNT
+		FROM 
+			sdic_inner_auction_set SIAS
+		WHERE 
+			SIAS.member_code = #{memberCode} 
+		AND
+			SIAS.is_delete = 0
+		AND 
+			SIAS.order_state = '50'
+		<!-- 待提车 -->
+		UNION ALL
+		SELECT 
+			'2' AS ORDER_STATE, COUNT(1) AS TAB_COUNT
+		FROM 
+			sdic_inner_auction_set SIAS
+		WHERE 
+			SIAS.member_code = #{memberCode} 
+		AND
+			SIAS.is_delete = 0
+		AND 
+			SIAS.order_state = '60'
+		<!-- 待过户 -->
+		UNION ALL
+		SELECT 
+			'3' AS ORDER_STATE, COUNT(1) AS TAB_COUNT
+		FROM 
+			sdic_inner_auction_set SIAS
+		WHERE 
+			SIAS.member_code = #{memberCode} 
+		AND
+			SIAS.is_delete = 0
+		AND 
+			SIAS.order_state = '70'
+		<!-- 过户完成 -->
+		UNION ALL
+		SELECT 
+			'4' AS ORDER_STATE, COUNT(1) AS TAB_COUNT
+		FROM 
+			sdic_inner_auction_set SIAS
+		WHERE 
+			SIAS.member_code = #{memberCode} 
+		AND
+			SIAS.is_delete = 0
+		AND 
+			SIAS.order_state = '80'
+	</select>
+	
+	<!-- 获取列表单个图片 -->
+	<select id="getHeadImgByAuctionId" resultType="String">
+		select
+			ta.storage_path
+		from 
+			car_pm_auction_file cpf left join tb_attachment ta on cpf.attachment_id = ta.id
+		where 
+			cpf.auction_id = #{auctionId}
+		and 
+			cpf.is_delete = 0
+		and 
+			ta.isvalid = 1
+		order by 
+			cpf.sort limit 1
+	</select>
+</mapper>

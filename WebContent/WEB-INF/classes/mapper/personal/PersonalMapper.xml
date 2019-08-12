@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="mapper.standard.PersonalMapper">
+	<resultMap id="account" type="Account">
+		<id 	column="uid" 						property="memberCode" />
+		<result column="nickname"					property="memberNo" />
+		<result column="to_pay_count" 				property="toPayCount" />
+		<result column="to_take_car_count" 			property="toTakeCarCount" />
+		<result column="to_transfer_count" 			property="toTransferCount" />
+		<result column="transfered_count" 			property="transferedCount" />
+		<result column="wallet_pledge_total" 		property="walletPledgeTotal" />
+		<result column="wallet_pledge" 				property="walletPledge" />
+		<result column="wallet_pledge_freeze" 		property="walletPledgeFreeze" />
+		<result column="transfer_ownership_pledge" 	property="transferOwnershipPledge" />
+	</resultMap>
+	<select id="getAccountByUid" resultMap="account">
+		SELECT 
+			SPCI.uid,SPCI.nickname,
+			(	SELECT 
+					COUNT(1) 
+				FROM 
+					sdic_inner_auction_set
+				WHERE 
+					member_code = SPCI.uid
+				AND 
+					order_state = '50'
+			) to_pay_count,
+			(	SELECT 
+					COUNT(1) 
+				FROM 
+					sdic_inner_auction_set
+				WHERE 
+					member_code = SPCI.uid
+				AND 
+					order_state = '50'
+			) to_take_car_count,
+			(	SELECT 
+					COUNT(1) 
+				FROM 
+					sdic_inner_auction_set
+				WHERE 
+					member_code = SPCI.uid
+				AND 
+					order_state = '60'
+			) to_transfer_count,
+			(	SELECT 
+					COUNT(1) 
+				FROM 
+					sdic_inner_auction_set
+				WHERE 
+					member_code = SPCI.uid
+				AND 
+					order_state = '61'
+			) transfered_count,
+			SPCM.wallet_pledge,
+			SPCM.wallet_pledge_freeze,
+			SPCM.transfer_ownership_pledge,
+			SPCM.wallet_pledge+SPCM.wallet_pledge_freeze wallet_pledge_total
+		FROM 
+			sdic_pm_customer_info SPCI LEFT JOIN sdic_pm_customer_margin SPCM on SPCI.uid = SPCM.uid
+		WHERE
+			SPCI.uid = #{uid}
+		AND 
+			SPCM.delete_tag = '0'
+	</select>
+	<select id="getPersonalInfo" resultType="PersonalInfo">
+		SELECT 
+			SPCI.uid memberCode,
+			SPCI.mobile memberName,
+			SPCI.nickname memberNo,
+			SPCI.mobile mobile,
+		    SPCI.type,
+			SPCI.truename realName,
+		    SPCI.validity,
+			SPCI.front_idcard frontIdcard,
+			SPCI.hand_idcard handIdcard, 
+			SPCI.back_idcard backIdcard,
+			SPCI.fax,
+			SPCI.authentication,
+			SPCI.examMemberDate,
+			SPCI.aidName
+		FROM 
+			sdic_pm_customer_info SPCI
+		WHERE
+			SPCI.uid = #{uid}
+	</select>
+	
+</mapper>

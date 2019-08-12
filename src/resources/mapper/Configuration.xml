@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE configuration PUBLIC "-//mybatis.org//DTD Config 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-config.dtd">
+
+<configuration>
+    <settings>
+		<setting name="cacheEnabled" value="true"></setting>
+		<setting name="lazyLoadingEnabled" value="true" />
+		<!-- 是否 启用  数据中 a_column 自动映射 到 java类中驼峰命名的属性-->
+        <setting name="mapUnderscoreToCamelCase" value="true" />
+	</settings>
+	<typeAliases>
+	    <!--交易大厅  -->
+	    <typeAlias alias="TraOrderDto"              type="com.sdic.tra.dto.TraOrderDto" />
+	    <typeAlias alias="CarPhoto"                 type="com.sdic.tra.entity.CarPhoto" />
+	    <typeAlias alias="Follow"                   type="com.sdic.follow.entity.Follow" />
+	    <typeAlias alias="CustomerInfo"             type="com.sdic.cus.entity.CustomerInfo" />
+	    <typeAlias alias="OrderInfoDto"             type="com.sdic.tra.dto.OrderInfoDto" />
+	    <typeAlias alias="BidDto"                   type="com.sdic.tra.dto.BidDto" />
+	    <typeAlias alias="CusCustomerMargin"        type="com.sdic.cus.entity.CusCustomerMargin" />
+	    <typeAlias alias="CusCustomerMarginWater"   type="com.sdic.cus.entity.CusCustomerMarginWater" />
+	    <typeAlias alias="TraHighestBid"            type="com.sdic.tra.entity.TraHighestBid" />
+	    <typeAlias alias="TraOfferWaterDto"         type="com.sdic.tra.dto.TraOfferWaterDto" />
+	    <typeAlias alias="TraOfferWater"            type="com.sdic.tra.entity.TraOfferWater" />
+	    <typeAlias alias="OfferWaterInfo"           type="com.sdic.offwater.entity.OfferWaterInfo" />
+	    <typeAlias alias="AuctionDto"               type="com.sdic.auction.dto.AuctionDto" />
+	    <typeAlias alias="AuctionFileDto"           type="com.sdic.auction.dto.AuctionFileDto" />
+	    <typeAlias alias="CarScrapOrderAutopartsDto"  type="com.sdic.auction.dto.CarScrapOrderAutopartsDto" />
+	    <!--订单中心  -->
+	    <typeAlias alias="AuctionOrder"           	type="com.sdic.order.entity.AuctionOrder" />
+	    <!--个人中心  -->
+	    <typeAlias alias="Account"           		type="com.sdic.personal.entity.Account" />
+	    <typeAlias alias="PersonalInfo"           	type="com.sdic.personal.entity.PersonalInfo" />
+	    <typeAlias alias="TradeFlow"           		type="com.sdic.personal.entity.TradeFlow" />
+	    <!--管理员功能  -->
+	    <typeAlias alias="MemberExam"           	type="com.sdic.admin.entity.MemberExam" />
+	    <typeAlias alias="Areas"					type="com.sdic.areas.entity.Areas" />
+	    <typeAlias alias="RecoverOrderDto"          type="com.sdic.RecoveryOrder.dto.RecoverOrderDto" />
+	</typeAliases>
+</configuration>

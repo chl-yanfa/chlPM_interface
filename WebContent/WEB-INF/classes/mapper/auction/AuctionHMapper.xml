@@ -1,0 +1,253 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="mapper.standard.AuctionHMapper">
+	<resultMap id="auctionList" type="AuctionDto">
+		<id 	column="id" 					property="id" />
+	    <result column="auction_type" 			property="auctionType" />
+	    <result column="auction_type_s" 		property="auctionTypeS" />
+	    <result column="auction_no" 			property="auctionNo" />
+	    <result column="full_name" 				property="fullName" />
+	    <result column="lot_areas" 				property="lotAreas" />
+	    <result column="lot_areas_id" 			property="lotAreasId" />
+	    <result column="create_user" 			property="createUser" />
+	    <result column="create_time" 			property="createTime" />
+	    <result column="order_state" 			property="orderState" />
+	    <result column="auction_start_time" 	property="auctionStartTime" />
+	    <result column="look_address" 			property="lookAddress" />
+	    <result column="look_coordinate" 		property="lookCoordinate" />
+	    <result column="auction_end_time" 	    property="auctionEndTime" />
+		<association property="imgPath" column="auctionId=id" javaType="String" 
+			select="getHeadImgByAuctionId"/>
+	</resultMap>
+	<resultMap id="auction" type="AuctionDto">
+		<id 	column="id" 					property="id" />
+	    <result column="auction_type" 			property="auctionType" />
+	    <result column="auction_type_s" 		property="auctionTypeS" />
+	    <result column="auction_no" 			property="auctionNo" />
+	    <result column="full_name" 				property="fullName" />
+	    <result column="vin" 					property="vin" />
+	    <result column="license_number" 		property="licenseNumber" />
+	    <result column="lot_areas" 				property="lotAreas" />
+	    <result column="lot_areas_id" 			property="lotAreasId" />
+	    <result column="production_date" 		property="productionDate" />
+	    <result column="is_has_key" 			property="isHasKey" />
+	    <result column="description" 			property="description" />
+	    <result column="buy_requirement" 		property="buyRequirement" />
+	    <result column="look_contacts" 			property="lookContacts" />
+	    <result column="look_contact_number" 	property="lookContactNumber" />
+	    <result column="look_address" 			property="lookAddress" />
+	    <result column="look_coordinate" 		property="lookCoordinate" />
+	    <result column="bid_notice" 			property="bidNotice" />
+	    <result column="special_notice" 		property="specialNotice" />
+	    <result column="is_delete" 				property="isDelete" />
+	    <result column="create_user" 			property="createUser" />
+	    <result column="create_time" 			property="createTime" />
+	    <result column="starting_price" 		property="startingPrice" />
+	    <result column="order_state" 			property="orderState" />
+	    <result column="order_state_s" 			property="orderStateS" />
+	    <result column="commission" 			property="commission" />
+	    <result column="other_price" 			property="otherPrice" />
+	    <result column="auction_start_time" 	property="auctionStartTime" />
+	    <result column="auction_end_time" 	    property="auctionEndTime" />
+	    <result column="parts_count"            property="lotPartsCount" />
+        <result column="parts_weight"           property="partsWeight" />
+		<collection property="auctionFileList" ofType="AuctionFileDto" column="auctionId=id"
+			select="getFileListByAuctionId">
+		</collection>
+		<collection property="autopartsList" ofType="CarScrapOrderAutopartsDto" column="auctionId=id"
+            select="getCarScrapOrderAutopartsListByAuctionId">
+  </collection>
+	</resultMap>
+	
+	<resultMap id="carScrapOrderAutopartsDto"  type="CarScrapOrderAutopartsDto">
+		  <id  column="id"     property="id" />
+		  <result column="order_id"     property="orderId" />
+		  <result column="order_no"     property="orderNo" />
+		  <result column="parts_type"    property="partsType" />
+		  <result column="parts_name"    property="partsName" />
+		  <result column="parts_num"     property="partsNum" />
+		  <result column="car_model_number"   property="carModelNumber" />
+		  <result column="car_frame_number"   property="carFrameNumber" />
+		  <result column="car_number"    property="carNumber" />
+		  <!-- <association property="headImgPath" column="order_id=id" javaType="String" 
+		   select="getHeadImg"/> -->
+ </resultMap>
+	
+	<sql id="ListIf">
+		<if test="auctionTypeArr.size() > 0 ">
+			AND cpa.auction_type in <foreach item="auction_type" index="index" collection="auctionTypeArr" open="(" separator="," close=")">#{auction_type}</foreach> 
+		</if>
+		<if test="lotAreasArr.size() > 0 ">
+			AND cpa.lot_areas_id in <foreach item="item" index="index" collection="lotAreasArr" open="(" separator="," close=")">#{item}</foreach> 
+		</if>
+	</sql>
+	<!-- 获取列表 -->
+	<select id="findAuction" resultMap="auctionList">
+	(SELECT * FROM 	
+		(SELECT
+		    SYSDATE()               as sysDate,
+			cpa.id,
+			cpa.auction_type,
+			CASE cpa.auction_type WHEN 0 THEN '整车配件' WHEN 1 THEN '高价值配件' WHEN 2 THEN '大宗物资' END AS auction_type_s,
+			cpa.full_name,
+			cpa.lot_areas,
+			cpa.lot_areas_id,
+			cpa.look_address, cpa.look_coordinate, 
+			cpas.order_state,
+			cpas.auction_start_time,
+			cpas.auction_end_time,
+			cpas.id as orderId,
+			 (	SELECT 
+            		MAX(HB.BID_AMOUNT)
+            	FROM car_pm_offer_water HB
+            	WHERE HB.is_delete = 0
+			    AND HB.ORDER_ID = cpas.id)   										   as  highestPrice 
+		FROM
+			car_pm_auction cpa
+			LEFT JOIN car_pm_auction_set cpas ON cpa.id = cpas.auction_id
+			LEFT JOIN car_pm_paimai cpp ON cpas.pmh_id = cpp.pmh_id
+		WHERE
+			cpa.is_delete = 0
+			AND cpas.is_delete = 0
+			AND cpas.is_history = 0
+			AND cpp.is_delete = 0
+			AND cpp.paimai_state in (1,2) 
+			AND cpas.order_state in ('10','20','30')
+			<include refid="ListIf" />
+			ORDER BY
+				cpas.order_state DESC ,
+			    cpas.pm_order ) as  aa)
+	   UNION 
+	   		(SELECT * FROM 	
+		(SELECT
+		    SYSDATE()               as sysDate,
+			cpa.id,
+			cpa.auction_type,
+			CASE cpa.auction_type WHEN 0 THEN '整车配件' WHEN 1 THEN '高价值配件' WHEN 2 THEN '大宗物资' END AS auction_type_s,
+			cpa.full_name,
+			cpa.lot_areas,
+			cpa.lot_areas_id,
+			cpa.look_address, cpa.look_coordinate, 
+			cpas.order_state,
+			cpas.auction_start_time,
+			cpas.auction_end_time,
+			cpas.id as orderId,
+			 (	SELECT 
+            		MAX(HB.BID_AMOUNT)
+            	FROM car_pm_offer_water HB
+            	WHERE HB.is_delete = 0
+			    AND HB.ORDER_ID = cpas.id)   										   as  highestPrice 
+		FROM
+			car_pm_auction cpa
+			LEFT JOIN car_pm_auction_set cpas ON cpa.id = cpas.auction_id
+			LEFT JOIN car_pm_paimai cpp ON cpas.pmh_id = cpp.pmh_id
+		WHERE
+			cpa.is_delete = 0
+			AND cpas.is_delete = 0
+			AND cpas.is_history = 0
+			AND cpp.is_delete = 0
+			AND cpp.paimai_state in (1,2) 
+			AND cpas.order_state in ('50')
+			<include refid="ListIf" />
+			ORDER BY
+				cpas.order_state DESC ,
+			    cpas.pm_order ) as  bb)    
+	</select>
+	<!-- 获取列表总条数 -->
+	<select id="findAuctionTotal" resultType="int">
+		SELECT 
+			COUNT(1)
+		FROM
+			car_pm_auction cpa
+			LEFT JOIN car_pm_auction_set cpas ON cpa.id = cpas.auction_id
+			LEFT JOIN car_pm_paimai cpp ON cpas.pmh_id = cpp.pmh_id
+		WHERE
+			cpa.is_delete = 0
+			AND cpas.is_delete = 0
+			AND cpas.is_history = 0
+			AND cpp.is_delete = 0
+			AND cpp.paimai_state in (1,2) 
+			AND cpas.order_state in ('10','20','30','50')
+			<include refid="ListIf" />
+	</select>
+	<!-- 获取竞拍详情 -->
+	<select id="getAuctionInfo" resultMap="auction">
+		SELECT 
+		    SYSDATE()               as sysDate,
+			cpa.id, cpa.auction_type, cpas.id as orderId,
+			CASE cpa.auction_type WHEN 0 THEN '整车配件' WHEN 1 THEN '高价值配件' WHEN 2 THEN '大宗物资' END AS auction_type_s,
+			cpa.auction_no, cpa.full_name, cpa.vin, cpa.parts_count, cpa.parts_weight,
+			cpa.license_number, cpa.lot_areas, cpa.lot_areas_id, 
+			cpa.production_date, cpa.is_has_key, cpa.description,
+			cpa.buy_requirement, cpa.look_contacts, cpa.look_contact_number, 
+			cpa.look_address, cpa.look_coordinate, 
+			cpa.bid_notice, cpa.special_notice,
+			cpa.create_user, cpa.create_time,
+			cpas.starting_price,
+			cpas.order_state,
+			CASE cpas.order_state WHEN 10 THEN '未开始' WHEN 20 THEN '竞价中' WHEN 30 THEN '已结束' WHEN 50 THEN '已成交' END AS order_state_s,
+			cpas.commission,
+			cpas.other_price,
+			cpas.auction_start_time,
+			cpas.auction_end_time,
+			 (	SELECT 
+            		MAX(HB.BID_AMOUNT)
+            	FROM car_pm_offer_water HB
+            	WHERE HB.is_delete = 0
+			    AND HB.ORDER_ID = cpas.id)   										   as  highestPrice  
+		FROM
+			car_pm_auction cpa LEFT JOIN car_pm_auction_set cpas ON cpa.id = cpas.auction_id
+		WHERE
+			cpa.id = #{id}
+			AND cpas.is_delete = 0
+			AND cpas.is_history = 0
+	</select>
+	<!-- 获取列表单个图片 -->
+	<select id="getHeadImgByAuctionId" resultType="String">
+		select
+			ta.storage_path
+		from 
+			car_pm_auction_file cpf left join tb_attachment ta on cpf.attachment_id = ta.id
+		where 
+			cpf.auction_id = #{auctionId}
+		and 
+			cpf.is_delete = 0
+		and 
+			ta.isvalid = 1
+		order by 
+			cpf.sort limit 1
+	</select>
+	<!-- 获取详情图片列表 -->
+	<select id="getFileListByAuctionId" resultType="AuctionFileDto">
+		select
+			cpf.id, cpf.auction_id, cpf.file_type, cpf.attachment_id, cpf.sort, 
+			cpf.create_time,
+			ta.storage_path img_path
+		from 
+			car_pm_auction_file cpf left join tb_attachment ta on cpf.attachment_id = ta.id
+		where 
+			cpf.auction_id = #{auctionId}
+		and 
+			cpf.is_delete = 0
+		and 
+			ta.isvalid = 1
+		order by cpf.sort 
+	</select>
+	
+	<select id="getCarScrapOrderAutopartsListByAuctionId" resultMap="carScrapOrderAutopartsDto">
+	  SELECT
+	   CSOA.id,CSOA.order_id,CSOA.parts_type,TCP.parts_name,CSOA.parts_num,
+	   CSO.order_no,CSO.car_model_number,
+	   CSO.car_frame_number,CSO.car_number
+	  FROM 
+	   car_scrap_order_autoparts CSOA LEFT JOIN car_scrap_order CSO on CSOA.order_id = CSO.id
+	   LEFT JOIN tb_car_parts TCP on CSOA.parts_type = TCP.id
+	  WHERE
+	   CSOA.auction_id = #{auctionId}
+	  AND
+	   CSOA.is_valid = 1
+	  AND
+	   CSO.isremove = 0
+	  ORDER BY CSOA.operatortime
+ </select>
+</mapper>

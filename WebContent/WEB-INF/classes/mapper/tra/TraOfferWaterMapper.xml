@@ -1,0 +1,415 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="mapper.standard.TraOfferWaterMapper">
+	<resultMap id="traOfferWater" type="TraOfferWater">
+		<result property="id" column="ID" />
+		<result property="memberCode" column="MEMBER_CODE" />
+		<result property="carCode" column="CAR_CODE" />
+		<result property="orderId" column="ORDER_ID" />
+		<result property="bidAmount" column="BID_AMOUNT" />
+		<result property="bidTime" column="BID_TIME" />
+		<result property="bidWay" column="BID_WAY" />
+		<result property="deleteTag" column="DELETE_TAG" />
+		<result property="ts" column="TS" />
+		<result property="timeliness" column="TIMELINESS" />
+		<result property="reservedField1" column="RESERVED_FIELD1" />
+		<result property="reservedField2" column="RESERVED_FIELD2" />
+		<result property="addExtent" column="ADD_EXTENT" />
+		<result property="bidType" column="BID_TYPE" />
+		<result property="promisesType" column="PROMISES_TYPE" />
+	</resultMap>
+	
+	<resultMap id="traOfferWaterDto" type="TraOfferWaterDto">
+		<result property="id" column="ID" />
+		<result property="memberCode" column="MEMBER_CODE" />
+		<result property="carCode" column="CAR_CODE" />
+		<result property="orderId" column="ORDER_ID" />
+		<result property="promisesType" column="PROMISES_TYPE" />
+		<result property="bidAmount" column="BID_AMOUNT" />
+		<result property="bidTime" column="BID_TIME" />
+		<result property="bidWay" column="BID_WAY" />
+		<result property="deleteTag" column="DELETE_TAG" />
+		<result property="ts" column="TS" />
+		<result property="timeliness" column="TIMELINESS" />
+		<result property="reservedField1" column="RESERVED_FIELD1" />
+		<result property="reservedField2" column="RESERVED_FIELD2" />
+		<result property="addExtent" column="ADD_EXTENT" />
+		<result property="bidType" column="BID_TYPE" />
+		<result property="license" column="LICENSE"/>
+	</resultMap>
+	<resultMap id="traOrderDto" type="TraOrderDto">
+		<result property="id" column="ID" />
+		<result property="carCode" column="CAR_CODE" />
+		<result property="userId" column="USER_ID" />
+		<result property="manufacturer" column="MANUFACTURER" />
+		<result property="brand" column="BRAND" />
+		<result property="model" column="MODEL" />
+		<result property="countryName" column="COUNTRY_NAME" />
+		<result property="seriesName" column="SERIES_NAME" />
+		<result property="licenseModel" column="LICENSE_MODEL" />
+		<result property="regDate" column="REG_DATE" />
+		<result property="license" column="LICENSE" />
+		<result property="mileage" column="MILEAGE" />
+		<result property="color" column="COLOR" />
+		<result property="rank" column="RANK" />
+		<result property="upsetprice" column="UPSETPRICE" />
+		<result property="aprice" column="APRICE" />
+		<result property="bidprice" column="BIDPRICE" />
+		<result property="quotationMode1" column="QUOTATION_MODE1" />
+		<result property="keyword" column="KEYWORD" />
+		<result property="status" column="STATUS" />
+		<result property="isAuthentication" column="IS_AUTHENTICATION" />
+		<result property="tradeTimes" column="TRADE_TIMES" />
+		<result property="reportTime" column="REPORT_TIME" />
+		<result property="created" column="CREATED" />
+		<result property="regarea" column="REGAREA" />
+		<result property="location" column="LOCATION" />
+		<result property="xmlPath" column="XML_PATH" />
+		<result property="carFirstImg" column="CAR_FIRST_IMG" />
+		<result property="isRecommend" column="IS_RECOMMEND" />
+		<result property="orderId" column="ORDER_ID" />
+		<result property="reportCode" column="REPORT_CODE" />
+		<result property="memberCode" column="MEMBER_CODE" />
+		<result property="sellerId" column="SELLER_ID" />
+		<result property="prices" column="PRICES" />
+		<result property="onTime" column="ON_TIME" />
+		<result property="offShelvesTime" column="OFF_SHELVES_TIME" />
+		<result property="orderCreatedDate" column="ORDER_CREATED_DATE" />
+		<result property="orderStatus" column="ORDER_STATUS" />
+		<result property="quotationMode2" column="QUOTATION_MODE2" />
+		<result property="lastModifyUser" column="LAST_MODIFY_USER" />
+		<result property="orderModifyDate" column="ORDER_MODIFY_DATE" />
+		<result property="ruleCode" column="RULE_CODE" />
+		<result property="totalScore" column="TOTAL_SCORE" />		
+		<result property="upsetPriceIn" column="UPSETPRICE_IN" />
+		<result property="upsetPriceOut" column="UPSETPRICE_OUT" />
+		<result property="auctionPriceIn" column="AUCTIONPRICE_IN" />
+		<result property="auctionPriceOut" column="AUCTIONPRICE_OUT" />
+		<result property="upsetPriceShow" column="UPSETPRICE_SHOW" />
+		<result property="tenderTime" column="TENDER_TIME" />
+		<result property="competeTime" column="COMPETE_TIME" />
+		<result property="isFollow" column="IS_FOLLOW" />
+		<result property="double1" column="DOUBLE" />
+		<result property="bidAmount" column="BID_AMOUNT" />
+		<result property="upsetpriceIn" column="UPSETPRICE_IN" />
+		<result property="upsetpriceOut" column="UPSETPRICE_OUT" />
+		<result property="areaLimit" column="AREA_LIMIT" />
+		<result property="myOfferCount" column="MY_OFFER_COUNT" />
+		<result property="offerCount" column="OFFER_COUNT" />
+		<result property="endMinutes" column="END_MINUTES" />
+		<result property="onlineTimes" column="ONLINE_TIMES" />
+		<result property="promisesType" column="PROMISES_TYPE" />
+		<result property="tradedTime" column="TRADED_TIME" />
+		<result property="type" column="TYPE" />
+		<result property="sysDate" column="SYSDATE" />		
+		<result property="tenderOverTime" column="TENDER_OVER_TIME" />
+		<result property="competeOverTime" column="COMPETE_OVER_TIME" />
+		<result property="competeEndTimeStr" column="COMPETE_END_TIME_STR" />
+		<result property="tenderEndTimeStr" column="TENDER_END_TIME_STR" />
+		<result property="competeTimeStr" column="COMPETE_TIME_STR" />
+		<result property="hMmbCodeIn" column="H_MMB_CODE_IN" />
+		<result property="hMmbCodeOut" column="H_MMB_CODE_OUT" />
+	</resultMap>
+	<sql id="page_limit_tail" >
+		<if test="endRow != null">
+			LIMIT #{startRow},#{endRow}
+		</if>
+	</sql>
+	
+	
+	<!-- 
+		获取我对某个订单的最高出价- 不区分报价和竞价
+	-->
+	<select id="getMaxBidAmountByUser" parameterType="map" resultType="int">
+		SELECT 
+		NVL(MAX(TOW.BID_AMOUNT),0) BID_AMOUNT
+		FROM TRA_OFFER_WATER TOW
+		<where>
+			TOW.DELETE_TAG = #{deleteTag} AND 
+			TOW.TIMELINESS = #{timeliness} AND  
+			TOW.MEMBER_CODE = #{memberCode} AND
+			TOW.ORDER_ID = #{orderId}
+		</where>
+	</select>
+	<!-- 
+		交易大厅-查询用户对某个订单的金额 - 报价
+	-->
+	<select id="findBidAmountByUser" parameterType="map" resultMap="traOfferWaterDto">
+		SELECT 
+		TOW.BID_AMOUNT,
+		TOW.PROMISES_TYPE
+		FROM TRA_OFFER_WATER TOW
+		<where>
+			TOW.BID_TYPE = '1' AND
+			TOW.DELETE_TAG = #{deleteTag} AND 
+			TOW.TIMELINESS = #{timeliness} AND  
+			TOW.MEMBER_CODE = #{memberCode} AND
+			TOW.ORDER_ID = #{orderId}
+		</where>
+	</select>
+
+	<!-- 
+		交易大厅-查询用户对某个订单的竞价金额 - 竞价
+	-->
+	<select id="findComAmountByUser" parameterType="TraOrderDto" resultMap="traOfferWaterDto">
+		SELECT 
+		TOW.BID_AMOUNT,
+		TOW.PROMISES_TYPE
+		FROM TRA_OFFER_WATER TOW
+		<where>
+			TOW.DELETE_TAG = #{deleteTag} AND 
+			TOW.TIMELINESS = #{timeliness} AND 
+			TOW.BID_TYPE in('0','3') AND
+			TOW.MEMBER_CODE = #{memberCode} AND
+			TOW.CAR_CODE = #{carCode}
+		</where>
+		ORDER BY BID_TIME DESC
+		LIMIT 1
+	</select>
+	<!-- 
+		查询用户对某个  车辆 的最高报价和竞价
+	-->
+	<select id="getQuoteAndBidByCarCode" parameterType="TraOrderDto" resultMap="traOfferWaterDto">
+		SELECT IFNULL(MAX(T.BID_AMOUNT), 0) AS BID_AMOUNT,T.BID_TYPE
+		 FROM
+			TRA_OFFER_WATER T
+		WHERE
+			T.MEMBER_CODE = #{memberCode}
+		AND T.ORDER_ID =#{orderId}
+		GROUP BY T.BID_TYPE
+	</select>
+	<!-- 
+		交易大厅-查询出价流水表
+	-->
+	<select id="findPriceList" parameterType="map" resultMap="traOfferWaterDto">
+	 	  SELECT 
+			  t.PROMISES_TYPE ,
+			  t.MEMBER_CODE,
+			  t.ORDER_ID,
+			  t.BID_AMOUNT,
+			  t.BID_TIME,
+			  t.BID_WAY,
+			  t.BID_TYPE,
+			  t.ADD_EXTENT 
+		FROM  TRA_OFFER_WATER t
+		WHERE t.BID_TYPE in(#{bidType0},#{bidType3}) 
+			<if test="promisesType != '' and promisesType != null ">
+				AND t.PROMISES_TYPE = #{promisesType}
+			</if>
+		  	AND t.DELETE_TAG = #{deleteTag}
+		  	AND t.TIMELINESS = #{timeliness} 
+		  	AND t.ORDER_ID = #{orderId}
+		  	ORDER BY t.BID_TIME DESC 
+		  	LIMIT 7
+	</select>
+	
+	<!-- 
+		交易大厅-查询用户的报价信息
+	-->
+	<select id="findOfferWaterByMember" parameterType="map" resultMap="traOfferWaterDto">
+		SELECT 
+		TOW.CAR_CODE,
+		TOW.ORDER_ID,
+		TOW.BID_AMOUNT,
+		TOW.PROMISES_TYPE
+		FROM TRA_OFFER_WATER TOW
+		LEFT JOIN TRA_INDENT C ON C.ORDER_ID = TOW.ORDER_ID 
+		<where>
+			TOW.DELETE_TAG = '0' AND 
+			TOW.TIMELINESS = #{timeliness} AND
+			TOW.BID_TYPE = '1' AND
+			TOW.MEMBER_CODE = #{memberCode} AND
+			C.ORDER_STATUS IN('70','80','90') 
+		</where>
+	</select>
+	
+	
+	
+			<!-- 
+			交易大厅-查询出价流水表         优质车辆的报价列表
+			需要参数：bidType：竞价  orderId：订单id
+		-->
+	<select id="findPriceList2" parameterType="map" resultMap="traOfferWaterDto">
+	 	  SELECT 
+		  t.PROMISES_TYPE ,
+		  t.MEMBER_CODE,
+		  t.ORDER_ID,
+		  t.BID_AMOUNT,
+		  t.BID_TIME,
+		  t.BID_WAY,
+		  t.BID_TYPE,
+		  t.ADD_EXTENT 
+		  from tra_offer_water t
+		<where>
+			t.ORDER_ID IS NULL AND 
+		  	t.CAR_CODE = #{carCode} AND
+		  	t.BID_TYPE = #{bidType} AND 
+		  	t.DELETE_TAG = #{deleteTag} AND 
+		  	t.TIMELINESS = #{timeliness} AND 
+    		t.RESERVED_FIELD1 is null
+		</where>
+	 ORDER BY t.BID_AMOUNT DESC limit #{rows}
+	</select>
+	
+	
+			<!-- 
+			交易大厅-查询出价流水表         优质车辆的报价列表
+			需要参数：bidType：竞价  orderId：订单id
+		-->
+	<select id="findPriceListLook" parameterType="map" resultMap="traOfferWaterDto">
+	 	  SELECT 
+		  t.PROMISES_TYPE ,
+		  t.MEMBER_CODE,
+		  t.ORDER_ID,
+		  t.BID_AMOUNT,
+		  t.BID_TIME,
+		  t.BID_WAY,
+		  t.BID_TYPE,
+		  t.ADD_EXTENT
+		  from tra_offer_water t 
+		<where>
+			t.ORDER_ID IS NULL AND 
+		  	t.CAR_CODE = #{carCode} AND
+		  	t.BID_TYPE = #{bidType} AND 
+		  	t.DELETE_TAG = #{deleteTag}  
+    		AND t.TIMELINESS = #{timeliness} 
+		</where>
+	 ORDER BY t.BID_AMOUNT DESC limit #{rows}
+	</select>
+	
+	
+		<!-- 
+			交易大厅-在流水表中获取我对某一辆车的报价列表 订单ID为空
+			需要参数：memberCode：买家code  carCode：订单id
+		-->
+	<select id="getMyCarQuotation" parameterType="map" resultMap="traOfferWaterDto">
+		SELECT 
+		TOW.BID_AMOUNT,
+		TOW.PROMISES_TYPE
+		FROM TRA_OFFER_WATER TOW
+		<where>
+			TOW.MEMBER_CODE = #{memberCode} AND
+			TOW.ORDER_ID IS NULL AND
+			TOW.CAR_CODE = #{carCode} AND 
+			TOW.BID_TYPE = '1' AND
+			TOW.DELETE_TAG = #{deleteTag} AND 
+			TOW.TIMELINESS = #{timeliness}  
+			ORDER BY TOW.BID_AMOUNT DESC
+		</where>
+	</select>
+	
+	
+		<!-- 
+			交易大厅-出价前判断当前会员出价次数 
+			需要参数：memberCode：买家code  orderId：订单id  bidType：出价类型    promisesType：过户承诺
+		-->
+	<select id="getQuotePriceSize" parameterType="map" resultMap="traOfferWaterDto">
+		SELECT 
+		TOW.BID_AMOUNT,
+		TOW.PROMISES_TYPE
+		FROM TRA_OFFER_WATER TOW
+		<where>
+			<if test="memberCode != null">
+    			 AND TOW.MEMBER_CODE = #{memberCode} 
+			</if>
+			<if test="orderId != null">
+    			AND TOW.ORDER_ID = #{orderId} 
+			</if>
+			<if test="bidType != null">
+    			AND TOW.BID_TYPE = #{bidType} 
+			</if>
+			<if test="promisesType != null">
+    			AND TOW.PROMISES_TYPE = #{promisesType} 
+			</if>
+			AND TOW.DELETE_TAG = '0' AND TOW.TIMELINESS = '0'
+		</where>
+	</select>
+	
+	<!-- 获取当前商户出过价的车辆总数 -->
+	<select id="getMeberBidTotal" parameterType="TraOfferWaterDto" resultType="int" >
+		SELECT
+			COUNT(*)
+		FROM(
+			SELECT
+				T.ORDER_ID
+			FROM
+				TRA_OFFER_WATER T
+			WHERE
+				T.MEMBER_CODE = #{memberCode}
+			GROUP BY
+				T.ORDER_ID
+		) TAB
+	</select>
+	<!-- 
+		交易大厅-保存流水
+	-->
+	<insert id="insertTraOfferWater" parameterType="map">
+		insert into CAR_PM_OFFER_WATER (
+		<trim suffix="" suffixOverrides=",">
+			<if test="id != null">
+				ID,
+			</if>
+			<if test="memberCode != null">
+				MID,
+			</if>
+			<if test="carCode != null">
+				AUCTION_NO,
+			</if>
+			<if test="orderId != null">
+				ORDER_ID,
+			</if>
+			<if test="orderNo != null">
+				ORDER_NO,
+			</if>
+			<if test="bidAmount != null">
+				BID_AMOUNT,
+			</if>
+			<if test="bidWay != null">
+				BID_WAY,
+			</if>
+			<if test="deleteTag != null">
+				IS_DELETE,
+			</if>
+			<if test="margin != null">
+				MARGIN,
+			</if>
+			BID_TIME,
+			TS
+		</trim>
+		) values(
+		<trim suffix="" suffixOverrides=",">
+			<if test="id != null">
+				#{id},
+			</if>
+			<if test="memberCode != null">
+				#{memberCode},
+			</if>
+			<if test="carCode != null">
+				#{carCode},
+			</if>
+			<if test="orderId != null">
+				#{orderId},
+			</if>
+			<if test="orderNo != null">
+				#{orderNo},
+			</if>
+			<if test="bidAmount != null">
+				#{bidAmount},
+			</if>
+			<if test="bidWay != null">
+				#{bidWay},
+			</if>
+			<if test="deleteTag != null">
+				#{deleteTag},
+			</if>
+			<if test="margin != null">
+				#{margin},
+			</if>
+			SYSDATE(),
+			SYSDATE()
+		</trim>
+		)
+	</insert>
+</mapper>

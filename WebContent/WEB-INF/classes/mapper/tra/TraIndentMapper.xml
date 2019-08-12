@@ -1,0 +1,292 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="mapper.standard.TraIndentMapper">
+
+	<resultMap id="traOrderDto" type="TraOrderDto">
+		<result property="id" column="ID" />
+		<association property="goodsAccessory" column="drivingNo=drivingNo" javaType="String" 
+			select="getGoodsAccessory"/>
+		<collection property="picList" ofType="CarPhoto" column="drivingNo=drivingNo"
+			select="mapper.standard.TraIndentMapper.getPicCollection">
+		</collection>
+	</resultMap>
+	
+	<resultMap id="picMap" type="CarPhoto">
+		<id column="id" jdbcType="VARCHAR" property="id" />
+		<result column="order1" jdbcType="INTEGER" property="order1" />
+		<result column="driving_no" jdbcType="VARCHAR" property="drivingNo" />
+		<result column="img_path" jdbcType="VARCHAR" property="imgPath" />
+		<result column="img_type" jdbcType="INTEGER" property="imgType" />
+		<result column="is_delete" jdbcType="INTEGER" property="isDelete" />
+		<result column="create_time" jdbcType="TIMESTAMP" property="createTime" />
+	</resultMap>
+	
+	<sql id="page_limit_tail" >
+		<if test="endRow != null">
+			LIMIT #{startRow},#{endRow}
+		</if>
+	</sql>
+	<select id="getGoodsAccessory" resultType="String">
+		SELECT 
+			file_path goodsAccessory 
+		FROM 
+			sdic_inner_auction_file
+		WHERE 
+			driving_no = #{drivingNo}
+		AND 
+			file_id = 4
+		limit 1
+	</select>
+	<select id="getPicCollection" resultMap="picMap">
+		SELECT  
+		      siap.id ,
+		      siap.`order` order1,
+		      siap.driving_no,
+		      siap.img_path,
+		      siap.img_type,
+		      siap.is_delete,
+		      siap.create_time
+		FROM  sdic_inner_auction_photo   siap
+		WHERE siap.driving_no = #{drivingNo,jdbcType=VARCHAR}
+		AND   siap.is_delete =0
+		ORDER BY siap.`order`
+	</select>
+	
+	<!-- 正在拍卖车辆列表-->
+	<select id="findTraOrder" parameterType="map" resultMap="traOrderDto">
+		SELECT  
+			SYSDATE()               												   as sysDate,    
+            concat(sia.driving_brand," ",sia.driving_model)   						   as carInfo ,
+            sia.full_name   						   								   as fullName ,
+		    sia.auction_type                                                           as auctionType,
+		    DATE_FORMAT(sia.register_date,'%Y-%m-%d')                                  as registerDate,
+		    sias.starting_price                                                        as startingPrice,
+		    sias.price_increase                                                        as priceIncrease,
+            sia.park_address                                                           as parkAddress,
+            sia.transfer_date                                                          as transferDate,
+            sias.auction_cash_deposit                                                  as auctionCashDeposit,
+            sias.commission_type													   as commissionType,
+            sias.commission                                                            as commission,
+            sias.commission_is_discount												   as commissionIsDiscount,
+            sias.commission_percent_type 											   as commissionPercentType,
+            sias.commission_discount_value 											   as commissionDiscountValue,
+            sias.rescue_cost 											   			   as rescueCost,
+            sias.other_cost 											               as otherCost,
+            sias.auction_time                                                     	   as auctionStartTime,
+            sias.compete_over_time                                                     as auctionFinishTime,
+            sias.interval_time                                                         as intervalTime,
+            sias.order_state                                                           as state,
+            sia.vehicle_name                                                           as vehicleName,
+            sia.driving_vin                                                            as drivingVin,
+            siw.car_card                                                               as carCard,
+            siw.`key`                                                                  as key1,
+            siw.spare_key                                                              as spareKey,
+            sia.strong_risk_date                                                       as strongRiskDate,
+            sia.annual_survey_date                                                     as annualSurveyDate,
+            concat(sia.displacement,'',sia.displacement_type)                             as displacement,
+            sia.gearbox_type                                                           as gearboxType,
+            sia.driving_type                                                           as drivingType ,
+            sia.car_remark                                                             as carRemark,
+            siw.dismantling_part                                                       as dismantlingPart,
+            sia.driving_no                                                             as drivingNo,
+            sia.driving_no                                                             as drivingNo1,
+            sia.license_number                                                         as licenseNumber ,
+            sias.id                                                                    as id ,
+            sip.auction_name 														   as pmhName,
+            sip.auction_platform													   as auctionPlatform,
+            (CASE WHEN spca.ID IS NULL THEN '0'
+                  ELSE spca.IS_UNFOLLOW END)                                           as isUnfollow,
+            (	SELECT 
+            		MAX(HB.BID_AMOUNT)
+            	FROM SDIC_PM_OFFER_WATER HB
+            	WHERE HB.DELETE_TAG = '0'
+			    AND HB.PROMISES_TYPE = '2'
+			    AND HB.BID_TYPE IN ('0', '3')
+			    AND HB.ORDER_ID = sias.id)   										   as  highestPrice    
+		FROM
+			sdic_inner_auction_set sias
+        LEFT JOIN sdic_inner_auction  sia ON  sias.auction_id = sia.id
+        LEFT JOIN sdic_inner_paimai   sip ON  sias.pmh_id = sip.pmh_id
+        LEFT JOIN sdic_inner_warehouse siw ON  sia.id = siw.auction_id
+        LEFT JOIN sdic_pm_customer_attention spca ON spca.DELETE_TAG='0' 
+                                                 AND spca.TIMELINESS='0' 
+                                                 AND spca.MEMBER_CODE=#{memberCode}
+                                                 AND spca.ORDER_ID= sias.id
+		WHERE
+		    sias.is_delete = 0
+		AND 
+			sia.is_delete = 0
+		AND 
+			sip.paimai_state = 1
+		<if test="drivingType!=null and drivingType!=''">
+			AND sia.driving_type = #{drivingType}
+		</if>
+		<if test="state!=null and state!=''">
+			AND sias.order_state = #{state}
+		</if>
+		<if test="parkAddress!=null and parkAddress!=''">
+			AND sia.province = #{parkAddress}
+		</if>
+		<if test="drivingBrand!=null and drivingBrand!=''">
+			AND sia.driving_brand = #{drivingBrand}
+		</if>
+		<if test="pmhType!=null and pmhType ==0">
+			AND sip.auction_platform = '国投互联'
+		</if>
+		<if test="pmhType!=null and pmhType ==1">
+			AND sip.auction_platform = '中拍协'
+		</if>
+		<if test="state==null or state==''">
+			AND (sias.order_state = '10' OR sias.order_state = '20' OR sias.order_state = '30')
+		</if>
+		ORDER BY
+			sias.order_state DESC,sias.pm_order
+	</select>
+	
+	<select id="findTraOrderTotal" resultType="int">
+		SELECT      
+            COUNT(1)
+		FROM
+			car_pm_auction_set sias
+        LEFT JOIN car_pm_auction  sia ON  sias.auction_id = sia.id
+        LEFT JOIN car_pm_paimai   sip ON  sias.pmh_id = sip.pmh_id
+		WHERE
+		    sias.is_delete = 0
+		AND 
+			sia.is_delete = 0
+		AND 
+			sip.paimai_state = 1
+		<if test="drivingType!=null and drivingType!=''">
+			AND sia.driving_type = #{drivingType}
+		</if>
+		<if test="state!=null and state!=''">
+			AND sias.order_state = #{state}
+		</if>
+		<if test="parkAddress!=null and parkAddress!=''">
+			AND sia.province = #{parkAddress}
+		</if>
+		<if test="drivingBrand!=null and drivingBrand!=''">
+			AND sia.driving_brand = #{drivingBrand}
+		</if>
+		<if test="pmhType!=null and pmhType ==0">
+			AND sip.auction_platform = '国投互联'
+		</if>
+		<if test="pmhType!=null and pmhType ==1">
+			AND sip.auction_platform = '中拍协'
+		</if>
+		<if test="state==null or state==''">
+			AND (sias.order_state = '10' OR sias.order_state = '20' OR sias.order_state = '30')
+		</if>
+		ORDER BY
+			sias.order_state DESC,sias.pm_order
+	</select>
+	
+	<select id="findMyOrderList" parameterType="map" resultMap="traOrderDto">
+	  		SELECT  
+			      concat(sia.driving_brand," ",sia.driving_model)    						 as carInfo ,
+			      sia.displacement                                                           as displacement,
+			      sia.gearbox_type                                                           as gearboxType,
+			      sias.order_number                                                          as orderNumber,
+			      sias.joint_price                                                           as jointPrice,
+			      sias.deal_type                                                             as dealType,
+			      sias.deal_date                                                             as dealDate,
+			      sias.order_state                                                           as orderState
+			FROM
+			     car_pm_auction_set sias
+			LEFT JOIN 
+			     car_pm_auction  sia   ON  sias.auction_id = sia.id   
+			WHERE
+			      sias.is_history='0' 
+			 <if test="deleteTag !=''">
+			 AND  sias.is_delete =#{deleteTag}
+			 </if>
+		<choose>	      
+			<when test="listType ==1">
+			AND   sias.order_state = '50'
+			</when>
+			<when test="listType ==2">
+			AND   sias.order_state = '51'
+			</when> 
+			<otherwise>
+			AND   sias.order_state in ('50','51')   
+			</otherwise>
+	    </choose>	     
+			<if test="memberCode !=''">
+			 AND     sias.member_code = #{memberCode}
+			</if>         
+			ORDER BY
+			      sias.deal_date  DESC
+		<include refid="page_limit_tail"/>
+	</select>
+	
+	<select id="getMyOrdersCount" parameterType="map" resultType="integer">
+		SELECT 
+		COUNT(*)
+		FROM
+			     car_pm_auction_set sias
+			LEFT JOIN 
+			     car_pm_auction  sia   ON  sias.auction_id = sia.id   
+			WHERE
+			  sias.is_history='0' 
+			 <if test="deleteTag !=''">
+			 AND  sias.is_delete =#{deleteTag}
+			 </if>
+		<choose>	      
+			<when test="listType ==1">
+			AND   sias.order_state = '50'
+			</when>
+			<when test="listType ==2">
+			AND   sias.order_state = '51'
+			</when> 
+			<otherwise>
+			AND   sias.order_state in ('50','51')   
+			</otherwise>
+	    </choose>	       
+			<if test="memberCode !=''">
+			 AND     sias.member_code = #{memberCode}
+			</if>         
+			ORDER BY
+			      sias.deal_date  DESC
+	</select>
+	<!--getTraOrderById 根据id获取拍卖车辆-->
+	<select id="getTraOrderById" resultType="TraOrderDto">
+          SELECT  
+            sias.starting_price                                                        as startingPrice,
+            sias.auction_cash_deposit                                                  as auctionCashDeposit,
+            sias.commission                                                            as commission,
+            sias.other_price                                                           as otherCost,
+            sias.auction_start_time                                                    as auctionStartTime,
+            sias.auction_end_time                                                      as auctionFinishTime,
+            sias.interval_time                                                         as intervalTime,
+            sias.order_state                                                           as state,
+            sias.id                                                                    as id
+		  FROM
+		   car_pm_auction_set sias
+		  WHERE
+		      sias.id = #{id}
+	</select>
+		<!-- 
+		将时间延长到还剩60秒结束
+	-->
+	<update id="updateTraIndentMinutes" parameterType="map">
+		UPDATE car_pm_auction_set set auction_end_time = date_add( auction_end_time, interval #{delaySecond} second)
+		WHERE ID = #{orderId}
+	</update>
+	<!-- 
+		更新拍卖车辆状态
+	-->
+	<update id="updateTraOrderState" parameterType="java.util.Map">
+		UPDATE 
+			car_pm_auction_set 
+		set 
+			order_state = #{orderState}
+		WHERE 
+			ID = #{orderId}
+	</update>
+
+
+
+	
+</mapper>

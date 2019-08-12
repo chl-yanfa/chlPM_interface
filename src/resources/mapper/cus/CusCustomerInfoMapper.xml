@@ -1,0 +1,812 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="mapper.standard.CusCustomerInfoMapper">
+	<resultMap id="cusCustomerInfo" type="CustomerInfo" >
+		
+  	</resultMap>
+  
+    <!--查询当前最大的MEMBER_CODE -->
+	<select id="getCusCustomerInfoMemberCode" resultMap="cusCustomerInfo" >
+		select max(MEMBER_CODE) as MEMBER_CODE from cus_customer_info
+	</select>
+	 <!--验证手机号是否存在 -->
+	<select id="validateUserMobile" resultType="String" >
+	    select USER_MOBILE
+	    from cus_customer_info 
+	    where USER_MOBILE=#{userMobile}
+	</select>
+	 <!--验证该用户名是否已注册 -->
+	<select id="validateUserName" resultType="String" >
+	    select USER_NAME
+	    from cus_customer_info 
+	    where USER_NAME=#{userName}
+	</select>
+    <!--登录 -->
+	<select id="getByLoginIdAndPassword" resultMap="cusCustomerInfo" >
+		SELECT T1.UID                                          AS memberCode
+		     , T1.NICKNAME                                     AS userName
+		   <!--   , T1.MEMBER_NAME                                  AS MEMBER_NAME -->
+		     , T1.PWD                                          AS userPass
+		     , T1.TRUENAME                                     AS realName
+		     , T1.MOBILE                                       AS userMobile
+		     <!-- , T1.IS_TEST                                      AS TIMELINESS -->
+		     <!-- , T1.RESERVED_FIELD1                              AS MEMBER_NUM
+         	 , T1.RESERVED_FIELD2 AS RESERVED_FIELD2
+         	 , T1.RESERVED_FIELD3 AS RESERVED_FIELD3 -->
+         	 , T1.VERIFYMEMBER                                  AS customerLevel
+<!-- 		     , NVL(T2.UPGRADE_HINTED, '1') AS UPGRADE_HINTED -->
+<!--          	 , NVL(T2.GRADE, '普通') AS GRADE -->
+		  FROM sdic_pm_customer_info T1
+<!-- 		  ,CUS_INTEGRAL_STATISTICS T2 -->
+		 WHERE 
+<!-- 		   T2.MEMBER_CODE = T1.MEMBER_CODE -->
+		   T1.ACCOUNT  = #{loginId}
+		   AND T1.PWD  = #{password}
+		   AND T1.del_flag     = 0
+	</select>
+	
+	<!-- 
+		我的账户-获取我的账户信息 -OK
+		需要参数：memberCode
+	-->
+  	<select id="getCusCustomerInfo" resultMap="cusCustomerInfo" >
+	    SELECT 
+	    	a.USER_NAME,
+	    	a.MEMBER_CODE,
+	    	a.MEMBER_NAME,
+	    	a.USER_MOBILE,
+	    	a.USER_EMAIL,
+	    	a.CONTACT_TYPE,
+	    	a.CONTACT_CODE,
+	    	a.CITY_NAME,
+	    	a.COMPANY_ADDR,
+	    	a.IS_COMPANY,
+	    	a.REAL_NAME,
+	    	a.USER_IMG,
+	    	a.CUSTOMER_LEVEL,
+			b.BUYER_MONEY,
+	    	b.BUYER_FREEZE,
+	    	b.USABLE_MARGIN 
+	    FROM cus_customer_info a 
+	    LEFT JOIN cus_customer_margin b ON b.MEMBER_CODE = a.MEMBER_CODE 
+	    WHERE a.MEMBER_CODE=#{memberCode}
+	</select>
+	<!-- 
+		根据memberCode获取用户信息
+		需要参数：memberCode
+	-->
+  	<select id="getCustomerByMemberCode" resultType="CustomerInfo" >
+	    SELECT 
+	    	uid memberCode,email userEmail,truename realName,nickname memberName,
+	    	mobile telephone,front_idcard frontIdcard,hand_idcard handIdcard, 
+		    back_idcard backIdcard,fax,authentication,
+		    examMemberDate,aidName, 
+		    validity,type
+	    FROM sdic_pm_customer_info
+	    WHERE uid=#{memberCode}
+	</select>
+	
+	<!-- getCustomerPwd 根据memberCode获取用户密码   用户修改密码校验-->
+	<select id="getCustomerPwd" resultType="String" >
+	    SELECT 
+	    	PWD
+	    FROM 
+	    	sdic_pm_customer_info
+	    WHERE 
+	    	UID = #{memberCode}
+	</select>
+	
+	<select id="getCode" resultType="String" >
+	    SELECT 
+	    	verification_code
+	    FROM 
+	    	sdic_pm_verification_code
+	    WHERE 
+	    	PHONE = #{newPhone}
+	     AND 
+            TS between date_add(now(), interval - 5 minute) and now()
+          ORDER BY  TS DESC 
+                    limit 1 ;   
+            
+	</select>
+	
+	
+    <select id="getMobile" resultType="String" >
+	    SELECT 
+	    	MOBILE
+	    FROM 
+	    	sdic_pm_customer_info
+	    WHERE 
+	    	MOBILE = #{newPhone};   
+            
+	</select>
+	
+   <select id="getMaxUid" resultType="String" >
+	    select ((select max(uid) from sdic_pm_customer_info)+1);  
+	</select>
+  
+  	<!-- 
+		我的账户-修改密码
+		需要参数：memberCode newPwd
+	-->
+  	<update id="updateUserPass" parameterType="java.util.Map">
+        UPDATE sdic_pm_customer_info
+	    <set>
+	    	PWD = #{newPwd}
+	    </set>
+    	WHERE UID = #{memberCode}
+  	</update>
+  	
+  	<update id="updateUserPhone" parameterType="java.util.Map">
+        UPDATE sdic_pm_customer_info
+	    <set>
+	    	MOBILE = #{newPhone}
+	    </set>
+    	WHERE UID = #{memberCode}
+  	</update>
+  	
+    <insert id="register"  parameterType="java.util.Map">
+        INSERT INTO sdic_pm_customer_info (
+               uid
+             <if test="phone != null and phone != ''">
+             , mobile
+             </if>
+             <if test="password != null and password != ''">
+             , pwd
+             </if>
+             <if test="phone != null and phone != ''">
+             , account
+             </if>
+             <if test="nickname != null and nickname != ''">
+             , nickname
+             </if>
+      ) values (
+      		  #{id}
+            <if test="phone != null and phone != ''">
+             ,  #{phone}
+             </if>
+             <if test="password != null and password != ''">
+             ,  #{password}
+             </if>
+             <if test="phone != null and phone != ''">
+             ,  #{phone}
+             </if>
+             <if test="nickname != null and nickname != ''">
+             ,  #{nickname}
+             </if>
+        )
+	</insert>
+	
+	<update id="forgetPassword" parameterType="java.util.Map">
+        UPDATE sdic_pm_customer_info
+	    <set>
+	    	PWD = #{password}
+	    </set>
+    	WHERE PHONE = #{phone}
+  	</update>
+		
+  	
+  	
+  	<!-- 
+		APP我的账户-修改头像名称
+		需要参数：memberCode
+	-->
+  	<update id="setUserImg" parameterType="map">
+        UPDATE cus_customer_info
+	    <set>
+	    	USER_IMG=#{userImg}
+	    </set>
+    	WHERE MEMBER_CODE = #{memberCode}
+  	</update>
+  	
+  	<!-- 
+		updateCertification 更新实名认证
+		需要参数：customerInfo
+	-->
+  	<update id="updateCertification">
+        UPDATE 
+        	sdic_pm_customer_info
+	    <set>
+			<if test="realName != null">
+				truename = #{realName},
+			</if>
+			<if test="frontIdcard != null">
+				front_idcard = #{frontIdcard},
+			</if>
+			<if test="handIdcard != null">
+				hand_idcard = #{handIdcard},
+			</if>
+			<if test="backIdcard != null">
+				back_idcard = #{backIdcard},
+			</if>
+			<if test="fax != null">
+				fax = #{fax},
+			</if>
+			<if test="authentication != null">
+				authentication = #{authentication},
+			</if>
+			<if test="examMemberDate != null">
+				examMemberDate = #{examMemberDate},
+			</if>
+			<if test="aidName != null">
+				aidName = #{aidName},
+			</if>
+			<if test="validity != null">
+				validity = #{validity},
+			</if>
+			<if test="type != null">
+				type = #{type},
+			</if>
+	    </set>
+    	WHERE uid = #{memberCode}
+  	</update>
+  	<!-- 
+		updateCertificationAudit 更新实名认证审核结果
+		需要参数：customerInfo
+	-->
+  	<update id="updateCertificationAudit">
+        UPDATE 
+        	sdic_pm_customer_info
+	    SET
+			authentication = #{authentication},
+			examMemberDate = now(),
+			aidName = #{aidName}
+    	WHERE 
+    		uid = #{memberCode}
+  	</update>
+  	
+  	<!-- 
+		保存极光ID
+		需要参数：memberCode
+	-->
+  	<update id="saveUserResId" parameterType="map">
+        UPDATE cus_customer_info
+	    <set>
+	    	RES_ID=#{resId}
+	    </set>
+    	WHERE MEMBER_CODE = #{memberCode}
+  	</update>
+  
+    <select id="findCusCustomerInfo" parameterType="map" resultMap="cusCustomerInfo">
+    select 
+    	MEMBER_CODE,
+    	USER_TYPE,
+    	USER_NAME,
+    	USER_PASS,
+    	CONTACT_TYPE,
+    	CONTACT_CODE,
+    	IS_COMPANY,
+    	COMPANY_NAME,
+    	COMPANY_TEL,
+    	COMPANY_ADDR,
+    	REAL_NAME,
+    	USER_MOBILE,
+    	USER_EMAIL,
+    	LOCKED,
+    	BUYER_LEVEL,
+    	SELLER_LEVEL,
+    	UTAG,
+    	MEMO,
+    	CREATED_DATE,
+    	AUDOT_DATE,
+    	AUDIT_USER_NAME,
+    	SMS_CHECKED,
+    	SEND_TAG,
+    	USER_STATUS,
+    	BIRTHDAY,
+    	GENDER,
+    	CITY_ID,
+    	AGE,
+    	AREA_ID
+    from cus_customer_info 
+    <where>
+    		<if test="userType != null">
+    			AND USER_TYPE = #{userType}
+			</if>
+    		<if test="userName != null">
+    			AND USER_NAME = #{userName}
+			</if>
+    		<if test="userPass != null">
+    			AND USER_PASS = #{userPass}
+			</if>
+    		<if test="contactType != null">
+    			AND CONTACT_TYPE = #{contactType}
+			</if>
+    		<if test="contactCode != null">
+    			AND CONTACT_CODE = #{contactCode}
+			</if>
+    		<if test="isCompany != null">
+    			AND IS_COMPANY = #{isCompany}
+			</if>
+    		<if test="companyName != null">
+    			AND COMPANY_NAME = #{companyName}
+			</if>
+    		<if test="companyTel != null">
+    			AND COMPANY_TEL = #{companyTel}
+			</if>
+    		<if test="companyAddr != null">
+    			AND COMPANY_ADDR = #{companyAddr}
+			</if>
+    		<if test="realName != null">
+    			AND REAL_NAME = #{realName}
+			</if>
+    		<if test="userMobile != null">
+    			AND USER_MOBILE = #{userMobile}
+			</if>
+    		<if test="userEmail != null">
+    			AND USER_EMAIL = #{userEmail}
+			</if>
+    		<if test="locked != null">
+    			AND LOCKED = #{locked}
+			</if>
+    		<if test="buyerLevel != null">
+    			AND BUYER_LEVEL = #{buyerLevel}
+			</if>
+    		<if test="sellerLevel != null">
+    			AND SELLER_LEVEL = #{sellerLevel}
+			</if>
+    		<if test="utag != null">
+    			AND UTAG = #{utag}
+			</if>
+    		<if test="memo != null">
+    			AND MEMO = #{memo}
+			</if>
+    		<if test="createdDate != null">
+    			AND CREATED_DATE = #{createdDate}
+			</if>
+    		<if test="audotDate != null">
+    			AND AUDOT_DATE = #{audotDate}
+			</if>
+    		<if test="auditUserName != null">
+    			AND AUDIT_USER_NAME = #{auditUserName}
+			</if>
+    		<if test="smsChecked != null">
+    			AND SMS_CHECKED = #{smsChecked}
+			</if>
+    		<if test="sendTag != null">
+    			AND SEND_TAG = #{sendTag}
+			</if>
+    		<if test="userStatus != null">
+    			AND USER_STATUS = #{userStatus}
+			</if>
+    		<if test="birthday != null">
+    			AND BIRTHDAY = #{birthday}
+			</if>
+    		<if test="gender != null">
+    			AND GENDER = #{gender}
+			</if>
+    		<if test="cityId != null">
+    			AND CITY_ID = #{cityId}
+			</if>
+    		<if test="age != null">
+    			AND AGE = #{age}
+			</if>
+    		<if test="areaId != null">
+    			AND AREA_ID = #{areaId}
+			</if>
+    		<if test="ts != null">
+    			AND TS = #{ts}
+			</if>
+    		<if test="reservedField1 != null">
+    			AND RESERVED_FIELD1 = #{reservedField1}
+			</if>
+    		<if test="reservedField2 != null">
+    			AND RESERVED_FIELD2 = #{reservedField2}
+			</if>
+    		<if test="reservedField3 != null">
+    			AND RESERVED_FIELD3 = #{reservedField3}
+			</if>
+    		<if test="reservedField4 != null">
+    			AND RESERVED_FIELD4 = #{reservedField4}
+			</if>
+    		<if test="reservedField5 != null">
+    			AND RESERVED_FIELD5 = #{reservedField5}
+			</if>
+			<if test="deleteTag != null">
+    			AND DELETE_TAG = #{deleteTag}
+			</if>
+			<if test="timeliness != null">
+    			AND TIMELINESS = #{timeliness}
+			</if>
+    </where>
+  </select>
+  
+   <select id="getAllCusCustomerInfo" resultMap="cusCustomerInfo">
+    select 
+    	MEMBER_CODE,
+    	USER_TYPE,
+    	USER_NAME,
+    	USER_PASS,
+    	CONTACT_TYPE,
+    	CONTACT_CODE,
+    	IS_COMPANY,
+    	COMPANY_NAME,
+    	COMPANY_TEL,
+    	COMPANY_ADDR,
+    	REAL_NAME,
+    	USER_MOBILE,
+    	USER_EMAIL,
+    	LOCKED,
+    	BUYER_LEVEL,
+    	SELLER_LEVEL,
+    	UTAG,
+    	MEMO,
+    	CREATED_DATE,
+    	AUDOT_DATE,
+    	AUDIT_USER_NAME,
+    	SMS_CHECKED,
+    	SEND_TAG,
+    	USER_STATUS,
+    	BIRTHDAY,
+    	GENDER,
+    	CITY_NAME,
+    	AGE,
+    	AREA_ID
+    from cus_customer_info
+  </select>
+  
+  <delete id="deleteCusCustomerInfo" >
+    delete from cus_customer_info where memberCode=#{memberCode}
+  </delete>
+  
+  	<delete id="deleteCusCustomerInfoBatch" parameterType="map">
+		delete from CUS_CUSTOMER_INFO
+		<where>
+	    		<if test="userType != null">
+	    			AND USER_TYPE = #{userType}
+				</if>
+	    		<if test="userName != null">
+	    			AND USER_NAME = #{userName}
+				</if>
+	    		<if test="userPass != null">
+	    			AND USER_PASS = #{userPass}
+				</if>
+	    		<if test="contactType != null">
+	    			AND CONTACT_TYPE = #{contactType}
+				</if>
+	    		<if test="contactCode != null">
+	    			AND CONTACT_CODE = #{contactCode}
+				</if>
+	    		<if test="isCompany != null">
+	    			AND IS_COMPANY = #{isCompany}
+				</if>
+	    		<if test="companyName != null">
+	    			AND COMPANY_NAME = #{companyName}
+				</if>
+	    		<if test="companyTel != null">
+	    			AND COMPANY_TEL = #{companyTel}
+				</if>
+	    		<if test="companyAddr != null">
+	    			AND COMPANY_ADDR = #{companyAddr}
+				</if>
+	    		<if test="realName != null">
+	    			AND REAL_NAME = #{realName}
+				</if>
+	    		<if test="userMobile != null">
+	    			AND USER_MOBILE = #{userMobile}
+				</if>
+	    		<if test="userEmail != null">
+	    			AND USER_EMAIL = #{userEmail}
+				</if>
+	    		<if test="locked != null">
+	    			AND LOCKED = #{locked}
+				</if>
+	    		<if test="buyerLevel != null">
+	    			AND BUYER_LEVEL = #{buyerLevel}
+				</if>
+	    		<if test="sellerLevel != null">
+	    			AND SELLER_LEVEL = #{sellerLevel}
+				</if>
+	    		<if test="utag != null">
+	    			AND UTAG = #{utag}
+				</if>
+	    		<if test="memo != null">
+	    			AND MEMO = #{memo}
+				</if>
+	    		<if test="createdDate != null">
+	    			AND CREATED_DATE = #{createdDate}
+				</if>
+	    		<if test="audotDate != null">
+	    			AND AUDOT_DATE = #{audotDate}
+				</if>
+	    		<if test="auditUserName != null">
+	    			AND AUDIT_USER_NAME = #{auditUserName}
+				</if>
+	    		<if test="smsChecked != null">
+	    			AND SMS_CHECKED = #{smsChecked}
+				</if>
+	    		<if test="sendTag != null">
+	    			AND SEND_TAG = #{sendTag}
+				</if>
+	    		<if test="userStatus != null">
+	    			AND USER_STATUS = #{userStatus}
+				</if>
+	    		<if test="birthday != null">
+	    			AND BIRTHDAY = #{birthday}
+				</if>
+	    		<if test="gender != null">
+	    			AND GENDER = #{gender}
+				</if>
+	    		<if test="cityId != null">
+	    			AND CITY_ID = #{cityId}
+				</if>
+	    		<if test="age != null">
+	    			AND AGE = #{age}
+				</if>
+	    		<if test="areaId != null">
+	    			AND AREA_ID = #{areaId}
+				</if>
+	    		<if test="deleteTag != null">
+	    			AND DELETE_TAG = #{deleteTag}
+				</if>
+	    		<if test="ts != null">
+	    			AND TS = #{ts}
+				</if>
+	    		<if test="timeliness != null">
+	    			AND TIMELINESS = #{timeliness}
+				</if>
+	    		<if test="reservedField1 != null">
+	    			AND RESERVED_FIELD1 = #{reservedField1}
+				</if>
+	    		<if test="reservedField2 != null">
+	    			AND RESERVED_FIELD2 = #{reservedField2}
+				</if>
+	    		<if test="reservedField3 != null">
+	    			AND RESERVED_FIELD3 = #{reservedField3}
+				</if>
+	    		<if test="reservedField4 != null">
+	    			AND RESERVED_FIELD4 = #{reservedField4}
+				</if>
+	    		<if test="reservedField5 != null">
+	    			AND RESERVED_FIELD5 = #{reservedField5}
+				</if>
+		</where>
+	</delete>
+
+	<delete id="deleteCusCustomerInfoBatchByPks" parameterType="string">
+		delete from CUS_CUSTOMER_INFO where MEMBER_CODE in
+		<foreach item="item" index="index" collection="array" open="(" separator="," close=")">
+			#{item}
+		</foreach>
+	</delete>
+  
+  <insert id="insertCusCustomerInfo" >
+     insert into CUS_CUSTOMER_INFO (
+     <trim suffix="" suffixOverrides=",">
+		 <if test="memberCode != null">
+	    		MEMBER_CODE,
+	     </if>
+		 <if test="userType != null">
+	    		USER_TYPE,
+	     </if>
+		 <if test="userName != null">
+	    		USER_NAME,
+	     </if>
+		 <if test="userPass != null">
+	    		USER_PASS,
+	     </if>
+		 <if test="contactType != null">
+	    		CONTACT_TYPE,
+	     </if>
+		 <if test="contactCode != null">
+	    		CONTACT_CODE,
+	     </if>
+		 <if test="isCompany != null">
+	    		IS_COMPANY,
+	     </if>
+		 <if test="companyName != null">
+	    		COMPANY_NAME,
+	     </if>
+		 <if test="companyTel != null">
+	    		COMPANY_TEL,
+	     </if>
+		 <if test="companyAddr != null">
+	    		COMPANY_ADDR,
+	     </if>
+		 <if test="realName != null">
+	    		REAL_NAME,
+	     </if>
+		 <if test="userMobile != null">
+	    		USER_MOBILE,
+	     </if>
+		 <if test="userEmail != null">
+	    		USER_EMAIL,
+	     </if>
+		 <if test="locked != null">
+	    		LOCKED,
+	     </if>
+		 <if test="buyerLevel != null">
+	    		BUYER_LEVEL,
+	     </if>
+		 <if test="sellerLevel != null">
+	    		SELLER_LEVEL,
+	     </if>
+		 <if test="utag != null">
+	    		UTAG,
+	     </if>
+		 <if test="memo != null">
+	    		MEMO,
+	     </if>
+		 <if test="createdDate != null">
+	    		CREATED_DATE,
+	     </if>
+		 <if test="audotDate != null">
+	    		AUDOT_DATE,
+	     </if>
+		 <if test="auditUserName != null">
+	    		AUDIT_USER_NAME,
+	     </if>
+		 <if test="smsChecked != null">
+	    		SMS_CHECKED,
+	     </if>
+		 <if test="sendTag != null">
+	    		SEND_TAG,
+	     </if>
+		 <if test="userStatus != null">
+	    		USER_STATUS,
+	     </if>
+		 <if test="birthday != null">
+	    		BIRTHDAY,
+	     </if>
+		 <if test="gender != null">
+	    		GENDER,
+	     </if>
+		 <if test="cityName != null">
+	    		CITY_NAME,
+	     </if>
+		 <if test="age != null">
+	    		AGE,
+	     </if>
+		 <if test="areaId != null">
+	    		AREA_ID,
+	     </if>
+		 <if test="deleteTag != null">
+	    		DELETE_TAG,
+	     </if>
+		 <if test="ts != null">
+	    		TS,
+	     </if>
+		 <if test="timeliness != null">
+	    		TIMELINESS,
+	     </if>
+		 <if test="reservedField1 != null">
+	    		RESERVED_FIELD1,
+	     </if>
+		 <if test="reservedField2 != null">
+	    		RESERVED_FIELD2,
+	     </if>
+		 <if test="reservedField3 != null">
+	    		RESERVED_FIELD3,
+	     </if>
+		 <if test="reservedField4 != null">
+	    		RESERVED_FIELD4,
+	     </if>
+		 <if test="reservedField5 != null">
+	    		RESERVED_FIELD5
+	     </if>
+      </trim>
+    ) values(
+     <trim suffix="" suffixOverrides=",">
+		 <if test="memberCode != null">
+	     #{memberCode},
+	     </if>
+		 <if test="userType != null">
+	     #{userType},
+	     </if>
+		 <if test="userName != null">
+	     #{userName},
+	     </if>
+		 <if test="userPass != null">
+	     #{userPass},
+	     </if>
+		 <if test="contactType != null">
+	     #{contactType},
+	     </if>
+		 <if test="contactCode != null">
+	     #{contactCode},
+	     </if>
+		 <if test="isCompany != null">
+	     #{isCompany},
+	     </if>
+		 <if test="companyName != null">
+	     #{companyName},
+	     </if>
+		 <if test="companyTel != null">
+	     #{companyTel},
+	     </if>
+		 <if test="companyAddr != null">
+	     #{companyAddr},
+	     </if>
+		 <if test="realName != null">
+	     #{realName},
+	     </if>
+		 <if test="userMobile != null">
+	     #{userMobile},
+	     </if>
+		 <if test="userEmail != null">
+	     #{userEmail},
+	     </if>
+		 <if test="locked != null">
+	     #{locked},
+	     </if>
+		 <if test="buyerLevel != null">
+	     #{buyerLevel},
+	     </if>
+		 <if test="sellerLevel != null">
+	     #{sellerLevel},
+	     </if>
+		 <if test="utag != null">
+	     #{utag},
+	     </if>
+		 <if test="memo != null">
+	     #{memo},
+	     </if>
+		 <if test="createdDate != null">
+	     #{createdDate},
+	     </if>
+		 <if test="audotDate != null">
+	     #{audotDate},
+	     </if>
+		 <if test="auditUserName != null">
+	     #{auditUserName},
+	     </if>
+		 <if test="smsChecked != null">
+	     #{smsChecked},
+	     </if>
+		 <if test="sendTag != null">
+	     #{sendTag},
+	     </if>
+		 <if test="userStatus != null">
+	     #{userStatus},
+	     </if>
+		 <if test="birthday != null">
+	     #{birthday},
+	     </if>
+		 <if test="gender != null">
+	     #{gender},
+	     </if>
+		 <if test="cityName != null">
+	     #{cityName},
+	     </if>
+		 <if test="age != null">
+	     #{age},
+	     </if>
+		 <if test="areaId != null">
+	     #{areaId},
+	     </if>
+		 <if test="deleteTag != null">
+	     #{deleteTag},
+	     </if>
+		 <if test="ts != null">
+	     #{ts},
+	     </if>
+		 <if test="timeliness != null">
+	     #{timeliness},
+	     </if>
+		 <if test="reservedField1 != null">
+	     #{reservedField1},
+	     </if>
+		 <if test="reservedField2 != null">
+	     #{reservedField2},
+	     </if>
+		 <if test="reservedField3 != null">
+	     #{reservedField3},
+	     </if>
+		 <if test="reservedField4 != null">
+	     #{reservedField4},
+	     </if>
+		 <if test="reservedField5 != null">
+	     #{reservedField5}
+	     </if>
+      </trim>
+    )
+  </insert>
+  
+  <!-- 得到商户的有效性 -->
+   <select id="getTimelinessByMemberCode" parameterType="string" resultType="string">
+    	select TIMELINESS as timeliness from CUS_CUSTOMER_INFO where MEMBER_CODE = #{memberCode}
+  </select>
+	
+</mapper>

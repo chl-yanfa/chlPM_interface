@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="mapper.standard.VerCodeMapper">
+	
+	<!--添加验证码-->
+	<insert id="addVerificationCode"  parameterType="java.util.Map">
+        INSERT INTO sdic_pm_verification_code (
+               id
+             <if test="code != null and code != ''">
+             , VERIFICATION_CODE
+             </if>
+             <if test="type != null and type != ''">
+             , TYPE
+             </if>
+             <if test="phone != null and phone != ''">
+             , PHONE
+             </if>
+      ) values (
+      		  #{id}
+            <if test="code != null and code != ''">
+             ,  #{code}
+             </if>
+             <if test="type != null and type != ''">
+             ,  #{type}
+             </if>
+              <if test="phone != null and phone != ''">
+             ,  #{phone}
+             </if>
+        )
+	</insert>
+	
+	
+ 
+</mapper>
